@@ -39,7 +39,11 @@ Two separate boards, **Main income first**, then **Fine**. Main is the Regular f
 
 ## Dashboard styles
 
-Pick a layout in the dashboard bar (**Dashboard style**) or press **Browse styles**. The style you choose is saved and is your default. Twelve styles: Movable blocks, Classic (the original), Essentials, Tabs, Fold-away sections, Two columns, Compact, Large and easy, Big total, Notice board, Quick jump, Plain sentences. Colours (six skins) work with every style except Classic.
+**Default: Day by day (my design)** — the layout from your design file: header (month, Print / PDF, Count cash), **Add anything, on any day** (board, date, type, who, amount, note), Where is every taka, Main board, Fine board, who owes whom, categories, vouchers, last 6 months. Fine stays separate; **Fine together** adds one combined "still need to give" card. **Focus** is the clean, simple alternative.
+
+**Focus** — a calm single-column dashboard with the soft "Eye comfort" colours: Still need to give (Main and Fine as two separate cards, or one combined card with the **Fine separate / Fine together** switch), people who owe you (person, fund, details on tap), quick add, cash. Fine is separate by default; the switch only changes the display, the records always keep Main and Fine apart. The old day-by-day boards are folded under "Day-by-day details", and every older style is still there.
+
+Pick a layout in the dashboard bar (**Dashboard style**) or press **Browse styles**. The style you choose is saved and is your default. **Smart (best of all)** puts the most useful parts of every style on one screen: a big still-to-give number, key figures, add-anything and who-owes-you beside the boards, boards that fold away, reports below. Fifteen styles: Day by day, Smart, Focus, Movable blocks, Classic (the original), Essentials, Tabs, Fold-away sections, Two columns, Compact, Large and easy, Big total, Notice board, Quick jump, Plain sentences. Colours (six skins) work with every style except Classic.
 
 - Default order everywhere: Total received, Income, Fine, People who owe me (person, fund it was given from, details on click), Spent and given out, Main and Fine boards.
 - Money taken from a fund (spent, or given to someone) is always red. "Spent from funds" never includes money given to someone who owes you.
@@ -167,3 +171,13 @@ Records visits (with IP address via api.ipify.org), page views, JavaScript error
 - **People who owe me** lists each person, the amount, the fund it was given from and the date. **Details** opens the full record.
 - Money taken out of a fund (Spent, Given to people) is shown in the same red. "Spent from funds" counts expenses only; money someone owes you is counted under "Given to people".
 - Code: `js/ui/dashboard-layout.js`, `css/dash-layout.css`. Settings live in `state.dash`.
+
+## Sidebar, logs and offline
+
+- The sidebar is grouped (Overview, Money in and out, Reports and checks, Tools). Each group folds open and closed and remembers its state; the group with the current page always opens.
+- **Activity and Bug Log**: tab counts, time and level filters, a bug/sync banner, a fold-away "how this works" note and IP table, "Show more" paging, CSV and JSON export. Test: `npm run test:logs`.
+- `npm run check` now also fails if a CSS or JS file is missing from the offline cache list in `service-worker.js`.
+
+## Automatic colours
+
+Settings > **Appearance: automatic colours**. Modes: Manual (top button), By time of day (for example light from 07:00, dark from 18:00; overnight windows work), or Follow my phone / computer. You can also pick dashboard colours for day and night. Checked once a minute and when the app opens. Saved on this device only (`fa-theme-auto`), never synced. Pressing the top Light/Dark button switches automatic mode off. Code: `js/ui/theme-auto.js`, test `npm run test:theme`.

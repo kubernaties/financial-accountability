@@ -3,13 +3,19 @@
  */
 import {log} from "../services/logger.js";
 import {download, toast} from "../core/feedback.js";
-import {defaultState, persist, replaceState, state} from "../core/store.js";
+import {defaultState, persist, replaceState, saveLocal, state} from "../core/store.js";
 import {$} from "../core/utils.js";
 import {render} from "./shell.js";
 import * as Sync from "../services/github-sync.js";
+import {applyAuto, setAuto} from "./theme-auto.js";
+import {app} from "./shell.js";
 
 export function hasDemoData(){return ["collections","expenses","vouchers","fines","handovers","advances","custom"].some(k=>(state[k]||[]).some(x=>String(x.id).includes("-DEMO-")));}
 export function bindSettings(){
+ $("#ap-save")?.addEventListener("click",()=>{
+  setAuto({mode:$("#ap-mode").value,lightFrom:$("#ap-light").value||"07:00",darkFrom:$("#ap-dark").value||"18:00",daySkin:$("#ap-dayskin").value,nightSkin:$("#ap-nightskin").value});
+  applyAuto(state,saveLocal);app();toast("Colour settings saved on this device");
+ });
  $("#connect-cloud").onclick=async()=>{try{await Sync.connect({repo:$("#sync-repo").value.trim(),branch:$("#sync-branch").value.trim(),token:$("#sync-token").value.trim(),passphrase:$("#sync-pass").value,encrypt:$("#sync-encrypt").checked,remember:$("#sync-remember").checked});render();}catch(e){toast(e.message);}};
  $("#sync-now").onclick=()=>Sync.syncNow();
  $("#export-connection").onclick=()=>{try{download("connection.json",Sync.exportConnection(),"application/json");toast("Upload connection.json to the main folder of your website repo");}catch(e){toast(e.message);}};

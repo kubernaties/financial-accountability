@@ -42,3 +42,16 @@ tr[hidden] {
   border-radius: 8px;
   max-width: 520px;
 }
+
+/* Activity and Bug Log */
+.lg-alert{margin:14px 0}
+.lg-fold{margin-bottom:12px}
+details.lg-fold>summary{font-weight:600;color:var(--text)}
+.lg-note{padding:0 4px 14px;color:var(--muted);font-size:14px;line-height:1.55}
+.lg-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.lg-tabs .btn{min-height:42px}
+.lg-count{display:inline-block;min-width:22px;padding:0 6px;margin-left:4px;border-radius:999px;background:rgba(127,127,127,.25);font-size:12px;text-align:center}
+.lg-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.lg-filters{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.lg-filters label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.lg-filters select{min-height:40px}

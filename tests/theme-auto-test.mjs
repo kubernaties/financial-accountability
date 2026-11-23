@@ -1,0 +1,25 @@
+// Automatic colours: schedule maths, saved settings, and applying to the state (Node only).
+const store={};
+globalThis.localStorage={getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=String(v)},removeItem:k=>{delete store[k]}};
+const {getAuto,setAuto,themeAt,wantedTheme,applyAuto}=await import("../js/ui/theme-auto.js");
+let bad=0;const t=(n,c)=>{if(!c){bad++;console.log("FAIL",n);}else console.log("PASS",n);};
+const at=(h,m=0)=>new Date(2026,10,23,h,m);
+t("default is manual",getAuto().mode==="manual"&&wantedTheme(at(12))===null);
+const a={mode:"time",lightFrom:"07:00",darkFrom:"18:00"};
+t("morning is light",themeAt(at(7,0),a)==="light");
+t("just before dark is light",themeAt(at(17,59),a)==="light");
+t("evening is dark",themeAt(at(18,0),a)==="dark");
+t("night is dark",themeAt(at(2,30),a)==="dark");
+const b={mode:"time",lightFrom:"20:00",darkFrom:"05:00"};
+t("overnight light window works",themeAt(at(23),b)==="light"&&themeAt(at(3),b)==="light"&&themeAt(at(12),b)==="dark");
+t("bad times fall back",(setAuto({lightFrom:"99:99"}),getAuto().lightFrom==="07:00"));
+setAuto({mode:"time",lightFrom:"07:00",darkFrom:"18:00",daySkin:"paper",nightSkin:"comfort"});
+const st={theme:"dark",dash:{skin:"comfort"}};let saved=0;
+t("noon switches to light + paper",applyAuto(st,()=>saved++,at(12))&&st.theme==="light"&&st.dash.skin==="paper"&&saved===1);
+t("same time again changes nothing",!applyAuto(st,()=>saved++,at(13))&&saved===1);
+t("night switches back",applyAuto(st,()=>{},at(22))&&st.theme==="dark"&&st.dash.skin==="comfort");
+setAuto({daySkin:"keep"});
+t("'Do not change' leaves the dashboard colours",(applyAuto(st,()=>{},at(12)),st.theme==="light"&&st.dash.skin==="comfort"));
+setAuto({mode:"manual"});
+t("manual mode never touches anything",!applyAuto({theme:"dark",dash:{}},()=>{},at(12)));
+process.exit(bad?1:0);

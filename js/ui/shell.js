@@ -7,11 +7,12 @@ import {bindCounter} from "./cash-counter.js";
 import {bindDemo} from "./demo-page.js";
 import {pageView} from "../services/logger.js";
 import {download, toast} from "../core/feedback.js";
-import {persist, state} from "../core/store.js";
+import {persist, saveLocal, state} from "../core/store.js";
 import {$, $$, active, esc, today} from "../core/utils.js";
 import {closeMonth, closePeriod, exportCSV, importJSON, openCustomReturn, openDay, openHoldReturn, openHoldSettle, openModal, openReimbursement, openRepayment, openVoucherFile, reopenMonth, reopenPeriod, reverseRecord, voidRecord} from "./forms/index.js";
 import {glance, glanceDetail, openCashCount} from "./overview.js";
 import {bindDashboard} from "./dashboard-layout.js";
+import {applyAuto, getAuto, setAuto} from "./theme-auto.js";
 import {getPage} from "./pages/index.js";
 import {bindSettings} from "./settings.js";
 import {view} from "./view-state.js";
@@ -25,20 +26,38 @@ export const nav=[
  ["reports","Reports"],["monthly","Monthly Reports"],["audit","Audit History"],["cashcounter","Cash Counter"],["logs","Activity and Bug Log"],["demo","New Features and Demo"],["settings","Settings"]
 ];
 
+/** Sidebar groups. Each folds open and closed; the group holding the current page always opens. */
+export const NAV_GROUPS=[
+ ["Overview",["dashboard","calendar"],true],
+ ["Money in and out",["transactions","collections","expenses","vouchers","holds","fines","handovers","transfers","advances","custom","adjustments"],false],
+ ["Reports and checks",["accountability","reports","monthly","audit"],false],
+ ["Tools",["cashcounter","logs","demo","settings"],false]
+];
+const NAVKEY="fa-nav-open";
+const navOpen=()=>{try{return JSON.parse(localStorage.getItem(NAVKEY)||"null")||{};}catch{return {};}};
+const navHtml=()=>{const saved=navOpen(),label=Object.fromEntries(nav);
+ return NAV_GROUPS.map(([name,keys,def])=>{const has=keys.includes(view.route),open=has||(name in saved?saved[name]:def);
+  return `<details class="nav-group" data-group="${esc(name)}"${open?" open":""}><summary>${esc(name)}</summary>${keys.map(k=>`<button class="nav-button ${view.route===k?"active":""}" data-route="${k}">${esc(label[k]||k)}</button>`).join("")}</details>`;}).join("");};
+
 export function app(){
+ applyAuto(state,saveLocal);
  document.documentElement.dataset.theme=state.theme||"dark";
  document.querySelector("#app").innerHTML=`
  <div class="app-shell"><aside class="sidebar" id="sidebar">
  <div class="brand"><span class="brand-mark">FA</span><span>Financial Manager</span></div>
- <nav class="nav">${nav.map(([key,label])=>`<button class="nav-button ${view.route===key?"active":""}" data-route="${key}">${label}</button>`).join("")}</nav>
+ <nav class="nav">${navHtml()}</nav>
  </aside><main class="main"><header class="topbar"><div class="topbar-left"><button class="btn small menu-toggle" id="menu">☰</button><h1 id="page-title"></h1></div>
  <div class="topbar-right"><button class="theme-switch" id="theme-switch" title="Switch theme">${state.theme==="dark"?"☀ Light":"☾ Dark"}</button><span class="sync-status" id="sync-status">${esc(Sync.label())} · ${esc(state.users.find(u=>u.id===state.currentUser)?.name||"Owner")}</span></div></header>
  <section class="content" id="content"></section></main></div>`;
  $$(".nav-button").forEach(b=>b.onclick=()=>navigate(b.dataset.route));
+ $$(".nav-group").forEach(d=>d.addEventListener("toggle",()=>{const o=navOpen();o[d.dataset.group]=d.open;try{localStorage.setItem(NAVKEY,JSON.stringify(o));}catch{}}));
  $("#menu").onclick=()=>$("#sidebar").classList.toggle("open");
- $("#theme-switch").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";persist("Theme changed","","",state.theme);render();};
+ $("#theme-switch").onclick=()=>{if(getAuto().mode!=="manual"){setAuto({mode:"manual"});toast("Automatic colours turned off. You can turn them on again in Settings.");}
+  state.theme=state.theme==="dark"?"light":"dark";persist("Theme changed","","",state.theme);app();};
  render();
 }
+/** Once a minute: if the time (or the device setting) says the colours should change, change them. */
+{const tick=setInterval(()=>{try{if(applyAuto(state,saveLocal))app();}catch{}},60000);tick?.unref?.();}
 export function navigate(r){view.route=r;location.hash=r;render();}
 window.addEventListener("hashchange",()=>{view.route=location.hash.slice(1)||"dashboard";render();});
 
@@ -50,6 +69,8 @@ export function render(){
   $("#err-backup")?.addEventListener("click",()=>download("financial-backup-error.json",JSON.stringify(state,null,2),"application/json"));
   $$("[data-route]").forEach(b=>b.onclick=()=>navigate(b.dataset.route));}
  pageView(view.route);
+ $$(".nav-button").forEach(b=>b.classList.toggle("active",b.dataset.route===view.route));
+ $$(".nav-group").forEach(d=>{if($$(".nav-button",d).some(b=>b.dataset.route===view.route))d.open=true;});
  $("#sidebar")?.classList.remove("open");
 }
 export function addSearch(){

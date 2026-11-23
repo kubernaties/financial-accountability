@@ -4,4 +4,4 @@
 import {today} from "../core/utils.js";
 
 
-export const view={route:location.hash.slice(1)||"dashboard",calendarCursor:new Date(),voucherDate:today(),showCalc:false,editLayout:false,dashGallery:false,dashTab:"overview",txf:{type:"",from:"",to:""},reportMode:"monthly",logTab:"traffic"};
+export const view={route:location.hash.slice(1)||"dashboard",calendarCursor:new Date(),voucherDate:today(),showCalc:false,editLayout:false,dashGallery:false,dashTab:"overview",txf:{type:"",from:"",to:""},reportMode:"monthly",logTab:"traffic",logRange:"all",logLevel:"all",logLimit:50};

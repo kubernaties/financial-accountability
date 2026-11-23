@@ -282,3 +282,247 @@ details.acc > summary {
     font-size: 32px;
   }
 }
+
+/* Eye-comfort colours: soft, low glare, muted red for money taken out */
+.dash[data-skin="comfort"] {
+  --bg: #1b201e;
+  --panel: #232a27;
+  --panel-2: #2b3330;
+  --line: #3a443f;
+  --text: #e4e8e3;
+  --muted: #a6b0a9;
+  --red: #e58f86;
+  --green: #8ccf9f;
+  --primary: #7fb8a0;
+  --amber: #dcb872;
+  --blue: #93b7da;
+}
+
+/* Focus dashboard: one calm column, generous spacing, nothing extra */
+.fx {
+  display: grid;
+  gap: 18px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.fx-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.fx-month {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+}
+.fx-month .btn.small {
+  min-width: 44px;
+  min-height: 44px;
+}
+.fx-seg {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+}
+.fx-seg button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  padding: 8px 16px;
+  min-height: 42px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.fx-seg button.on {
+  background: var(--panel-2);
+  color: var(--text);
+  font-weight: 600;
+}
+.fx-boards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 16px;
+}
+.fx-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+}
+.fx-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.fx-chip {
+  font-size: 12px;
+  font-weight: 400;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.fx-lab {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.fx-big {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  line-height: 1.2;
+}
+.fx-sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+.fx-rows {
+  margin-top: 14px;
+}
+.fx-rows > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.fx-total {
+  font-size: 20px;
+}
+.fx-list {
+  margin-top: 6px;
+}
+.fx-person {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 10px 2px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fx-person:hover {
+  background: var(--panel-2);
+}
+.fx-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fx-go {
+  color: var(--muted);
+}
+.fx-foot {
+  margin-top: 10px;
+}
+.fx-quick .btn {
+  min-height: 46px;
+}
+.fx-cash {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.fx-cash strong {
+  color: var(--text);
+}
+details.fx-more > summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  min-height: 48px;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin-bottom: 12px;
+}
+
+/* "Day by day" style: the layout from the design mockup */
+.mk {
+  display: grid;
+  gap: 16px;
+}
+.mk-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.mk-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+}
+.mk-title .btn.small {
+  min-width: 44px;
+  min-height: 44px;
+}
+.mk-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.mk-form input,
+.mk-form select {
+  min-height: 44px;
+}
+.mk-add .btn.primary {
+  min-height: 46px;
+}
+
+/* "Smart (best of all)" style */
+.sm{display:grid;gap:16px}
+.sm-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+.sm-hero{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:16px}
+.sm-main{background:linear-gradient(135deg,rgba(59,130,246,.22),rgba(59,130,246,.06));border:1px solid rgba(59,130,246,.45);border-radius:16px;padding:20px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.sm-big{font-size:clamp(34px,6vw,52px);font-weight:800;line-height:1.05;letter-spacing:-.02em}
+.sm-split{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:14px}
+.sm-split strong{color:var(--text)}
+.sm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.sm-kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:2px}
+.sm-kpi strong{font-size:22px}
+.sm-boards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.sm-board{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.sm-num{font-size:28px;font-weight:700}
+.sm-cols{display:grid;grid-template-columns:minmax(0,3fr) minmax(300px,2fr);gap:16px;align-items:start}
+.sm-right{display:grid;gap:16px;position:sticky;top:84px}
+.sm-fold{padding:0;margin-bottom:12px}
+details.sm-fold>summary{font-weight:600;color:var(--text)}
+@media(max-width:900px){.sm-hero,.sm-cols{grid-template-columns:1fr}.sm-right,.sm-top{position:static}}
+
+/* Day by day: "Where is every taka?" as in the design */
+.mkg .gl-bar{margin-top:10px}
+.mkg-c1{background:#3b82f6}.mkg-c2{background:#ef4444}.mkg-c3{background:#8b7be8}.mkg-c4{background:#f5a524}.mkg-c5{background:#22a37a}.mkg-c6{background:#e0556f}
+.mkg-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:14px}
+.mkg-grid .gl-card{background:var(--panel-2);border-color:transparent}
+.mk .banner{margin:0}
+@media(max-width:900px){.mkg-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.mk-styles{margin-top:16px}
+.mk-styles .dash-bar{margin:0 0 12px}

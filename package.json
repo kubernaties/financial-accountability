@@ -9,7 +9,9 @@
     "check": "node scripts/check-syntax.mjs",
     "test:boards": "node tests/boards-test.mjs",
     "test:dashboard": "node tests/dashboard-styles-test.mjs",
-    "test": "node scripts/check-syntax.mjs && node tests/smoke-test.mjs > /dev/null && node tests/robustness-test.mjs"
+    "test:logs": "node tests/logs-test.mjs",
+    "test:theme": "node tests/theme-auto-test.mjs",
+    "test": "node scripts/check-syntax.mjs && node tests/smoke-test.mjs > /dev/null && node tests/robustness-test.mjs && node tests/logs-test.mjs > /dev/null && node tests/theme-auto-test.mjs > /dev/null && node tests/dashboard-styles-test.mjs > /dev/null"
   },
   "engines": {"node": ">=18"}
 }

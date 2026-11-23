@@ -9,9 +9,9 @@ import {openCustomReturn, openHoldReturn, openHoldSettle, openModal, openReimbur
 import {view} from "./view-state.js";
 import {render} from "./shell.js";
 
-const month=()=>view.boardMonth||(view.boardMonth=today().slice(0,7));
+export const month=()=>view.boardMonth||(view.boardMonth=today().slice(0,7));
 const shift=(m,d)=>{const x=new Date(Number(m.slice(0,4)),Number(m.slice(5,7))-1+d,1);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}`;};
-const monthName=m=>new Date(Number(m.slice(0,4)),Number(m.slice(5,7))-1,1).toLocaleString("en-GB",{month:"long",year:"numeric"});
+export const monthName=m=>new Date(Number(m.slice(0,4)),Number(m.slice(5,7))-1,1).toLocaleString("en-GB",{month:"long",year:"numeric"});
 const dayName=d=>d==="0000-00-00"?"No date":new Date(d+"T00:00:00").toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
 const tag=k=>`<span class="bd-tag bd-${KINDS[k][1]}">${esc(KINDS[k][0])}</span>`;
 const cashText=e=>e.cash>0?`+${money(e.cash)}`:e.cash<0?`−${money(-e.cash)}`:`${money(e.v)} · no cash moved`;
@@ -68,6 +68,9 @@ export function boardsSection(){
  <div class="bd-total"><div><span>Should give principal</span><strong>${money(sh)}</strong></div><div><span>Already given</span><strong>${money(gv)}</strong></div><div class="bd-hl"><span>Still need to give (Main + Fine)</span><strong>${money(st)}</strong></div></div>
  ${BOARDS.map(b=>boardHtml(b,m)).join("")}${obligationsHtml()}</section>`;
 }
+
+/** Just the two boards and the owed lists (no month bar, no quick buttons). Used by the "Day by day" style. */
+export function boardsCore(){const m=month();return `${BOARDS.map(b=>boardHtml(b,m)).join("")}${obligationsHtml()}`;}
 
 const modal=(title,body,buttons=[])=>{
  $(".modal-backdrop")?.remove();

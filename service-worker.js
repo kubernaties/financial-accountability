@@ -1,4 +1,4 @@
-const CACHE = "financial-accountability-v15";
+const CACHE = "financial-accountability-v19";
 const ASSETS = [
   "./",
   "./index.html",
@@ -30,6 +30,8 @@ const ASSETS = [
   "./js/finance/overview.js",
   "./js/ui/boards.js",
   "./js/ui/dashboard-layout.js",
+  "./js/ui/inline-add.js",
+  "./js/ui/theme-auto.js",
   "./js/finance/reporting.js",
   "./js/services/crypto.js",
   "./js/services/dialog.js",

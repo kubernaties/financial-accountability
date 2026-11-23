@@ -1,0 +1,25 @@
+// Renders the Activity and Bug Log page with synthetic entries and checks filters and paging (Node only).
+import fs from "node:fs";
+const src=fs.readFileSync(new URL("./smoke-test.mjs",import.meta.url),"utf8").split("\n");
+const setupEnd=src.findIndex(l=>l.startsWith("const {")||l.startsWith("import(")||l.includes("await import"));
+eval(src.slice(3,setupEnd>0?setupEnd:16).join("\n"));
+const {log}=await import("../js/services/logger.js");
+const {view}=await import("../js/ui/view-state.js");
+const {logsPage}=await import("../js/ui/logs-page.js");
+let bad=0;const t=(n,c)=>{if(!c){bad++;console.log("FAIL",n);}else console.log("PASS",n);};
+log("visit","App opened");log("bug","Boom",{level:"error",stack:"at x"});log("sync","Sync failed",{level:"warn"});
+for(let i=0;i<70;i++)log("page","Opened p"+i);
+view.logTab="traffic";view.logRange="all";view.logLevel="all";view.logLimit=50;
+let h=logsPage();
+t("renders without undefined",h.length>500&&!h.includes("undefined"));
+t("has filters, tabs with counts, export JSON",h.includes('id="log-range"')&&h.includes('id="log-level"')&&h.includes("lg-count")&&h.includes("data-log-json"));
+t("bug banner shown",h.includes("bug(s) recorded"));
+view.logTab="all";h=logsPage();
+t("paging shows a Show more button",h.includes("data-log-more"));
+view.logLimit=500;h=logsPage();
+t("no Show more when all shown",!h.includes("data-log-more"));
+view.logLevel="error";view.logTab="all";h=logsPage();
+t("error filter keeps the bug only",h.includes("Boom")&&!h.includes("Opened p1<"));
+view.logLevel="all";view.logTab="security";h=logsPage();
+view.logLevel="error";view.logTab="security";h=logsPage();t("empty tab shows a friendly message",h.includes("Nothing here for this filter"));
+process.exit(bad?1:0);

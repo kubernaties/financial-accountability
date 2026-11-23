@@ -11,7 +11,7 @@ export function defaultState(){
   transactions:[],collections:[],expenses:[],vouchers:[],fines:[],advances:[],handovers:[],custom:[],
   reimbursements:[],holds:[],transfers:[],cashCounts:[],adjustments:[],periods:[],monthly:[],audit:[],reconfirmedDates:[],boardClose:[],
   categories:["Electricity","Electricity Meter 1","Electricity Meter 2","Wi-Fi & Internet","Water","Gas","Hospitality","Photocopy","Printing","Stationery","Transportation","Maintenance","Cleaning","Communication","Miscellaneous"],
-  dash:{style:"new",skin:"default",order:[],hidden:[]},
+  dash:{v:4,style:"mock",skin:"comfort",fineTogether:false,order:[],hidden:[]},
   settings:{repo:"",branch:"main",demo:false,lastSync:null,remoteSha:null,backupFile:"backups/financial-data.json"}
  };
 }

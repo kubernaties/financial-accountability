@@ -11,10 +11,17 @@ import {glance} from "./overview.js";
 import {view} from "./view-state.js";
 import {categoryBars, collectionBars, expenseSourceTable, fundTable, monthlyChart, personTable, principalPanel, voucherStatusCards} from "./widgets.js";
 import {render} from "./shell.js";
-import {bindBoards, boardsSection} from "./boards.js";
+import {bindBoards, boardsCore, boardsSection, month, monthName} from "./boards.js";
+import {ENTRY_TYPES, addEntry} from "./inline-add.js";
+import {closeRec} from "../finance/boards.js";
+import {today} from "../core/utils.js";
+import {BOARDS, boardMonth, boardTotals, mustGivePrincipal, obligations} from "../finance/boards.js";
 
 /** Dashboard styles (layouts). "new" = movable blocks (kept id for saved settings), "classic" = the original page. */
 export const STYLES=[
+ ["mock","Day by day (my design)","Header, add anything on any day, Where is every taka, Main and Fine boards, who owes whom, categories, vouchers, last 6 months."],
+ ["smart","Smart (best of all)","The most useful parts of every style on one screen: big still-to-give, key figures, add-anything on the side, who owes you, boards that fold away, reports below."],
+ ["focus","Focus (clean, what I need most)","Calm and simple: still to give, Main and Fine kept apart (or together), who owes you, quick add."],
  ["new","Movable blocks","Drag blocks to reorder them and hide what you do not need. Your own order, saved."],
  ["classic","Classic","The dashboard exactly as it was before."],
  ["essentials","Essentials","Only what you check every day: money in, money out, who owes you, quick actions."],
@@ -29,11 +36,13 @@ export const STYLES=[
  ["story","Plain sentences","A short written summary first, then the blocks."]
 ];
 
-export const SKINS=[["default","Current theme"],["paper","Paper (light)"],["ledger","Ledger (dark, warm)"],["soft","Soft pastel"],["bold","Bold (black and yellow)"],["calm","Calm (green and cream)"]];
+export const SKINS=[["comfort","Eye comfort (soft dark)"],["default","Current theme"],["paper","Paper (light)"],["ledger","Ledger (dark, warm)"],["soft","Soft pastel"],["bold","Bold (black and yellow)"],["calm","Calm (green and cream)"]];
 
 /** Saved dashboard settings, always in a safe shape. */
 export function cfg(){
  const d=state.dash&&typeof state.dash==="object"?state.dash:(state.dash={});
+ if(d.v!==4){d.v=4;d.style="mock";if(!d.skin||d.skin==="default")d.skin="comfort";}
+ d.fineTogether=!!d.fineTogether;
  if(!STYLES.some(x=>x[0]===d.style))d.style="new";
  if(!SKINS.some(s=>s[0]===d.skin))d.skin="default";
  if(!Array.isArray(d.order))d.order=[];
@@ -49,9 +58,9 @@ export function owedRows(){
  holdList().forEach(h=>{const o=holdOutstanding(h);
   if(o>0)r.push({key:"h:"+h.id,name:h.recipient||"Someone",who:"Waiting for voucher",amount:o,given:num(h.amount),returned:sum(h.returns||[],"amount"),fund:h.fund||"Not recorded",date:h.date||"",status:holdStatus(h),note:h.purpose||""});});
  active(state.advances).forEach(a=>{const o=Math.max(0,num(a.amount)-num(a.returned)-num(a.spent)-sum(a.repayments||[],"amount"));
-  if(o>0)r.push({key:"a:"+a.id,name:a.recipient||"Someone",who:"Advance",amount:o,given:num(a.amount),returned:num(a.returned),fund:"Not recorded",date:a.date||"",status:a.status||"Open",note:a.purpose||""});});
+  if(o>0)r.push({key:"a:"+a.id,name:a.recipient||"Someone",who:"Advance",amount:o,given:num(a.amount),returned:num(a.returned),fund:REG,date:a.date||"",status:a.status||"Open",note:a.purpose||""});});
  const p=sum(active(state.adjustments).filter(a=>a.credit==="Principal payable"));
- if(p>0)r.push({key:"p:adj",name:"Principal",who:"Account adjustment",amount:p,given:p,returned:0,fund:"Not recorded",date:"",status:"Principal owes me",note:""});
+ if(p>0)r.push({key:"p:adj",name:"Principal",who:"Account adjustment",amount:p,given:p,returned:0,fund:REG,date:"",status:"Principal owes me",note:""});
  return r.sort((x,y)=>String(y.date).localeCompare(String(x.date)));
 }
 const fundChip=f=>badge(f,f===FINE?"amber":f===REG?"green":"blue");
@@ -92,8 +101,106 @@ const plainAll=ids=>ids.map(id=>plain(id)).join("");
 const ALL=()=>BLOCKS.map(b=>b[0]);
 const TABS=[["overview","Overview",["received","moneyout","quick"]],["boards","Boards",["boards"]],["owed","Who owes me",["owed"]],["money","Money",["glance","principal","funds"]],["reports","Reports",["spending","people","months","vouchers"]]];
 
+
+const shortFund=f=>f===FINE?"Fine":f===REG?"Main":esc(f);
+function focusHtml(){
+ const d=cfg(),m=month(),together=d.fineTogether,g=glanceData();
+ const bm=BOARDS.map(b=>({b,o:boardMonth(b,m)})),T=k=>Math.round(bm.reduce((n,x)=>n+x.o[k],0)*100)/100;
+ const sumO={still:T("still"),had:T("had"),spent:T("spent"),givenAll:T("givenAll"),cash:T("cash")};
+ const rows=o=>`<div class="fx-rows"><div><span>Received this month</span><strong>${money(o.had)}</strong></div><div><span>Spent this month</span><strong class="out-text">${money(o.spent)}</strong></div><div><span>Given to principal so far</span><strong>${money(o.givenAll)}</strong></div><div><span>Cash left</span><strong>${money(o.cash)}</strong></div></div>`;
+ const card=(title,chip,o,sub,fund)=>`<div class="fx-card"><div class="fx-title"><span>${title}</span><span class="fx-chip">${chip}</span></div><div class="fx-lab">Still need to give</div><div class="fx-big">${money(o.still)}</div><div class="fx-sub">${sub}</div>${rows(o)}<div class="actions" style="margin-top:14px"><button class="btn primary" data-modal="handover"${fund?` data-preset-fund="${esc(fund)}"`:""}>Give to principal</button></div></div>`;
+ const cards=together
+  ?card("Main + Fine together","Shown as one",sumO,`Main ${money(bm[0].o.still)} · Fine ${money(bm[1].o.still)}. Only the display is combined, the records stay apart.`,"")
+  :card("Main income","Priority",bm[0].o,"Your main money.",bm[0].b.fund)+card("Fine","Fine money only",bm[1].o,"Kept apart. Usually given to sir at the end of the month.",bm[1].b.fund);
+ const ow=owedRows(),ob=obligations().totals;
+ const people=ow.length?ow.map(x=>`<button class="fx-person" data-owed="${esc(x.key)}"><span class="fx-name"><strong>${esc(x.name)}</strong><span class="fx-sub">${esc(x.who)}${x.date?" · "+esc(x.date):""}</span></span><span class="fx-chip">from ${shortFund(x.fund)}</span><strong class="out-text">${money(x.amount)}</strong><span class="fx-go" aria-hidden="true">›</span></button>`).join(""):`<div class="empty">Nobody owes you money.</div>`;
+ const quick=(label,p)=>`<button class="btn" data-modal="custom" ${Object.entries(p).map(([k,v])=>`data-preset-${k}="${esc(v)}"`).join(" ")}>${label}</button>`;
+ return `<div class="fx">
+ <div class="fx-top"><div class="fx-month"><button class="btn small" data-bd-month="-1" aria-label="Previous month">‹</button><strong>${esc(monthName(m))}</strong><button class="btn small" data-bd-month="1" aria-label="Next month">›</button></div>
+  <div class="fx-seg" role="group" aria-label="Fine money"><button class="${together?"":"on"}" data-fine-mode="separate">Fine separate</button><button class="${together?"on":""}" data-fine-mode="together">Fine together</button></div></div>
+ <div class="fx-boards">${cards}</div>
+ <div class="fx-card"><div class="fx-title"><span>People who owe me</span><strong class="out-text fx-total">${money(owedTotal())}</strong></div><div class="fx-sub">Tap a name to see what was given, from which fund, and what came back.</div><div class="fx-list">${people}</div>
+  ${ob.iOwe||ob.personal?`<div class="fx-sub fx-foot">I owe others ${money(ob.iOwe)} · My personal take ${money(ob.personal)}</div>`:""}</div>
+ <div class="fx-card"><div class="fx-title"><span>Add</span></div><div class="actions fx-quick"><button class="btn primary" data-modal="collection">+ Collection</button><button class="btn primary" data-modal="expense">+ Expense</button>${quick("Someone took money",{direction:"Someone owes me",fund:REG,party:"Other"})}<button class="btn" data-modal="hold">Money on hold (no voucher)</button></div></div>
+ <div class="fx-cash"><span>Cash with me (expected) <strong>${money(g.cash)}</strong>${g.last?` · counted ${money(g.last.counted)} on ${esc(g.last.at.slice(0,10))}`:" · never counted"}</span><button class="btn small" data-cash-count>Count cash</button></div>
+ <details class="fx-more"><summary>Day-by-day details (Main and Fine boards)</summary>${boardsSection()}</details>
+ </div>`;
+}
+
+const fineSeg=t=>`<div class="fx-seg" role="group" aria-label="Fine money"><button class="${t?"":"on"}" data-fine-mode="separate">Fine separate</button><button class="${t?"on":""}" data-fine-mode="together">Fine together</button></div>`;
+function addCard(cls=""){
+ const sel=(id,opts)=>`<select id="${id}">${opts.map(o=>`<option value="${o[0]}">${esc(o[1])}</option>`).join("")}</select>`;
+ return `<div class="card mk-add ${cls}" id="blk-add"><h3>Add anything, on any day</h3><div class="card-sub">Pick any date, even an old one. Every balance after that date updates.</div>
+  <div class="mk-form">${sel("mk-board",[["main","Main board"],["fine","Fine board"]])}<input type="date" id="mk-date" value="${today()}" aria-label="Date">${sel("mk-type",ENTRY_TYPES)}<input id="mk-who" placeholder="Who, e.g. Karim sir" aria-label="Who"><input id="mk-amt" type="number" min="1" step="1" placeholder="Amount" aria-label="Amount"><input id="mk-note" placeholder="Note" aria-label="Note"></div>
+  <div class="actions" style="margin-top:10px"><button class="btn primary" id="mk-add">Add entry</button><span id="mk-err" class="card-sub out-text" role="alert"></span></div></div>`;
+}
+
+function smartHtml(){
+ const d=cfg(),m=month(),together=d.fineTogether,g=glanceData();
+ const bm=BOARDS.map(b=>boardMonth(b,m)),open=BOARDS.some(b=>closeRec(m,b)?.status!=="Closed"),ob=obligations().totals;
+ const still=Math.round(bm.reduce((n,x)=>n+x.still,0)*100)/100;
+ const ow=owedRows();
+ const people=ow.length?ow.map(x=>`<button class="fx-person" data-owed="${esc(x.key)}"><span class="fx-name"><strong>${esc(x.name)}</strong><span class="fx-sub">${esc(x.who)}${x.date?" · "+esc(x.date):""}</span></span><span class="fx-chip">from ${shortFund(x.fund)}</span><strong class="out-text">${money(x.amount)}</strong><span class="fx-go" aria-hidden="true">›</span></button>`).join(""):`<div class="empty">Nobody owes you money.</div>`;
+ const bcard=(t,chip,o,fund)=>`<div class="sm-board"><div class="fx-title"><span>${t}</span><span class="fx-chip">${chip}</span></div><div class="fx-lab">Still need to give</div><div class="sm-num">${money(o.still)}</div><div class="fx-sub">Received ${money(o.had)} · Spent ${money(o.spent)} · Given ${money(o.givenAll)}</div><div class="actions" style="margin-top:10px"><button class="btn small primary" data-modal="handover" data-preset-fund="${esc(fund)}">Give to principal</button></div></div>`;
+ const kpi=(l,v,sub,cls="")=>`<div class="sm-kpi"><span class="card-label">${l}</span><strong class="${cls}">${v}</strong><span class="card-sub">${esc(sub)}</span></div>`;
+ return `<div class="sm">
+ <div class="card sm-top"><div class="mk-title"><button class="btn small" data-bd-month="-1" aria-label="Previous month">‹</button><strong>${esc(monthName(m))}</strong><button class="btn small" data-bd-month="1" aria-label="Next month">›</button><span class="badge ${open?"amber":"green"}">Round ${open?"open":"finished"}</span></div>
+  <div class="actions">${fineSeg(together)}<button class="btn" data-jump="add">+ Add entry</button><button class="btn" data-print>Print / PDF</button><button class="btn" data-cash-count>Count cash</button></div></div>
+ ${g.warn.length?`<div class="banner warn">${g.warn.map(w=>`<div>⚠ ${esc(w)}</div>`).join("")}</div>`:""}
+ <div class="sm-hero"><div class="sm-main"><div class="fx-lab">Still need to give the principal</div><div class="sm-big">${money(still)}</div>
+   <div class="sm-split">${together?`<span>Main ${money(bm[0].still)} + Fine ${money(bm[1].still)} shown together</span>`:`<span>Main <strong>${money(bm[0].still)}</strong></span><span>Fine <strong>${money(bm[1].still)}</strong></span>`}</div></div>
+  <div class="sm-kpis">${kpi("Total received",money(g.recv),"All boards")}${kpi("Spent",money(g.spentX),"Expenses only","out-text")}${kpi("Cash with me",money(g.cash),g.last?"Counted "+money(g.last.counted):"Never counted")}${kpi("Owed to me",money(owedTotal()),"People who owe me","out-text")}${kpi("I owe others",money(ob.iOwe),"Teachers, change")}${kpi("My personal take",money(ob.personal),"Must put back")}</div></div>
+ ${together?"":`<div class="sm-boards">${bcard("Main income","Priority",bm[0],BOARDS[0].fund)}${bcard("Fine","Fine money only",bm[1],BOARDS[1].fund)}</div>`}
+ <div class="sm-cols"><div class="sm-left">
+   <details class="fx-more sm-fold" open><summary>Day by day: Main and Fine boards</summary>${boardsCore()}</details>
+   <details class="fx-more sm-fold"><summary>Where is every taka?</summary>${glance()}</details>
+  </div><aside class="sm-right">
+   ${addCard()}
+   <div class="card"><div class="fx-title"><span>People who owe me</span><strong class="out-text fx-total">${money(owedTotal())}</strong></div><div class="fx-sub">Tap a name. Given from which fund, and what came back.</div><div class="fx-list">${people}</div></div>
+  </aside></div>
+ <div class="grid cards-2"><div class="card"><h3>Spending by category</h3>${categoryBars()}</div><div class="card"><h3>Collections by category</h3>${collectionBars()}</div></div>
+ <div class="grid cards-2"><div class="card"><h3>Vouchers</h3>${voucherStatusCards()}</div><div class="card"><h3>Last 6 months</h3>${monthlyChart()}</div></div>
+ </div>`;
+}
+
+/** "Where is every taka?" exactly as in the design: banners first, then the bar, legend and nine figure cards. */
+function mockGlance(){
+ const g=glanceData(),m=money,owedMe=Math.round(owedRows().filter(r=>!r.key.startsWith("h:")).reduce((n,r)=>n+r.amount,0)*100)/100;
+ const should=Math.round(BOARDS.reduce((n,b)=>n+boardTotals(b).should,0)*100)/100;
+ const parts=[["Cash with me",g.cash,"c1"],["Spent",g.spentX,"c2"],["Given to principal",g.hand,"c3"],["Waiting for voucher",g.hold,"c4"],["Owed to me",owedMe,"c5"],["My personal take",g.persOut,"c6"]];
+ const tot=Math.max(1,parts.reduce((n,p)=>n+Math.max(0,p[1]),0));
+ const c=(k,l,v,sub)=>`<button class="gl-card" data-glance="${k}"><span class="card-label">${l}</span><strong>${m(v)}</strong><span class="card-sub">${esc(sub)}</span></button>`;
+ return `${g.warn.map(w=>`<div class="banner warn">${esc(w)}</div>`).join("")}
+ <div class="banner ok">Received ${m(g.recv)} = placed ${m(g.placed)} · unexplained ${m(g.diff)}</div>
+ <div class="card mkg"><h3>Where is every taka?</h3>
+  <div class="gl-bar" role="img" aria-label="Money distribution">${parts.map(p=>`<span class="seg mkg-${p[2]}" style="width:${(Math.max(0,p[1])/tot*100).toFixed(2)}%" title="${esc(p[0])} ${m(p[1])}"></span>`).join("")}</div>
+  <div class="gl-legend">${parts.map(p=>`<span><i class="dot mkg-${p[2]}"></i>${esc(p[0])}: <strong>${m(p[1])}</strong></span>`).join("")}</div>
+  <div class="mkg-grid">${c("received","Total received",g.recv,"All boards")}${c("spent","Spent",g.spentX,"Expenses only")}${c("cash","Cash with me",g.cash,"Expected")}${c("hand","Given to principal",g.hand,"All boards")}${c("owedprin","Still need to give",mustGivePrincipal(),"Should give "+m(should))}${c("owedme","Owed to me",owedMe,"Loans and change")}${c("iowe","I owe others",g.iOweOthers,"Teachers, change")}${c("hold","Waiting for voucher",g.hold,"Not an expense yet")}${c("pers","My personal take",g.persOut,"Must put back")}</div>
+ </div>`;
+}
+
+function mockHtml(){
+ const d=cfg(),m=month(),together=d.fineTogether,g=glanceData();
+ const bms=BOARDS.map(b=>boardMonth(b,m)),open=BOARDS.some(b=>closeRec(m,b)?.status!=="Closed");
+ const sumStill=Math.round(bms.reduce((n,x)=>n+x.still,0)*100)/100;
+ const combined=together?`<div class="card mk-comb"><strong>Main + Fine together</strong><div class="fx-big">${money(sumStill)}</div><div class="card-sub">Still need to give. Main ${money(bms[0].still)} · Fine ${money(bms[1].still)}. Display only, the records stay apart.</div></div>`:"";
+ return `<div class="mk">
+ <div class="card mk-head"><div><div class="mk-title"><strong>${esc(monthName(m))}</strong></div><div class="card-sub">Round ${open?"open":"finished"}. All amounts in ৳. Click any card, row or person for full details.</div></div>
+  <div class="actions"><button class="btn" data-print>Print / PDF report</button><button class="btn" data-cash-count>Count cash now</button></div></div>
+ ${addCard()}
+ ${combined}${mockGlance()}
+ ${boardsCore()}
+ <div class="grid cards-2"><div class="card"><h3>Spending by category</h3>${categoryBars()}</div><div class="card"><h3>Collections by category</h3>${collectionBars()}</div></div>
+ <div class="grid cards-2"><div class="card"><h3>Vouchers</h3>${voucherStatusCards()}</div><div class="card"><h3>Bank, bKash, Nagad</h3><div class="card-sub">Not tracked yet. No figure shown rather than a made-up one.</div></div></div>
+ <div class="card"><h3>Last 6 months</h3>${monthlyChart()}</div>
+ </div>`;
+}
+
 /** One function per layout. Each reuses the same blocks, so every figure agrees in every style. */
 const LAYOUTS={
+ mock:mockHtml,
+ smart:smartHtml,
+ focus:focusHtml,
  essentials:()=>plainAll(["received","moneyout","owed","quick"]),
  tabs:()=>{const cur=TABS.some(t=>t[0]===view.dashTab)?view.dashTab:"overview",t=TABS.find(x=>x[0]===cur);
   return `<div class="dash-tabs" role="tablist">${TABS.map(x=>`<button class="btn${x[0]===cur?" primary":""}" role="tab" aria-selected="${x[0]===cur}" data-dtab="${x[0]}">${x[1]}</button>`).join("")}</div>${plainAll(t[2])}`;},
@@ -116,7 +223,7 @@ function galleryPanel(cur){
 /** The dashboard page: a small settings bar, then the chosen style. The style you pick is your saved default. */
 export function dashboardShell(classicHtml){
  const d=cfg(),movable=d.style==="new"&&!classicHtml,edit=!!view.editLayout&&movable,opt=(v,l,cur)=>`<option value="${v}"${v===cur?" selected":""}>${l}</option>`;
- const bar=`<div class="dash-bar"><label>Dashboard style <select id="dash-style">${STYLES.map(x=>opt(x[0],esc(x[1]),d.style)).join("")}</select></label><button class="btn" id="dash-gallery">${view.dashGallery?"Hide styles":"Browse styles"}</button>${classicHtml?"":`<label>Colors <select id="dash-skin">${SKINS.map(s=>opt(s[0],s[1],d.skin)).join("")}</select></label>`}${movable?`<button class="btn" id="dash-edit">${edit?"Done":"Edit layout"}</button>${edit?`<button class="btn" id="dash-reset">Reset layout</button>`:""}`:""}</div>${view.dashGallery?galleryPanel(d.style):""}`;
+ const bar=`<div class="dash-bar"><label>Dashboard style <select id="dash-style">${STYLES.map(x=>opt(x[0],esc(x[1]),d.style)).join("")}</select></label><button class="btn" id="dash-gallery">${view.dashGallery?"Hide styles":"Browse styles"}</button>${d.style==="mock"?fineSeg(d.fineTogether):""}${classicHtml?"":`<label>Colors <select id="dash-skin">${SKINS.map(s=>opt(s[0],s[1],d.skin)).join("")}</select></label>`}${movable?`<button class="btn" id="dash-edit">${edit?"Done":"Edit layout"}</button>${edit?`<button class="btn" id="dash-reset">Reset layout</button>`:""}`:""}</div>${view.dashGallery?galleryPanel(d.style):""}`;
  if(classicHtml)return bar+classicHtml;
  let body;
  if(movable){
@@ -124,7 +231,10 @@ export function dashboardShell(classicHtml){
    return `<section class="dz${hid?" is-hidden":""}" data-block="${id}">${edit?`<div class="dz-bar"><span class="dz-grip" title="Drag to move">⠿ ${esc(b[1])}</span><span class="actions"><button class="btn small" data-move="-1" data-block="${id}" aria-label="Move up">▲</button><button class="btn small" data-move="1" data-block="${id}" aria-label="Move down">▼</button><button class="btn small" data-hide="${id}">${hid?"Show":"Hide"}</button></span></div>`:""}${b[2]()}</section>`;}).join("");
   if(edit)body=`<div class="banner">Drag a block by its title, or use ▲ ▼ on a phone. Hide what you do not need. Every change is saved automatically.</div><br>${body}`;
  }else body=(LAYOUTS[d.style]||LAYOUTS.compact)();
- return `${bar}<div class="dash${edit?" editing":""}" data-skin="${d.skin}" data-layout="${d.style}">${body}</div>`;
+ const page=`<div class="dash${edit?" editing":""}" data-skin="${d.skin}" data-layout="${d.style}">${body}</div>`;
+ /* The design style opens exactly like the design: no bar on top. Style, colours and Fine switch sit in a fold-away panel at the very end. */
+ if(d.style==="mock")return page+`<details class="fx-more mk-styles"><summary>Change month or dashboard style</summary><div class="dash-bar"><button class="btn" data-bd-month="-1">‹ Previous month</button><button class="btn" data-bd-month="1">Next month ›</button></div>${bar}</details>`;
+ return `${bar}${page}`;
 }
 
 /** Wires the settings bar, style gallery, tabs, quick jump, owed-to-me details and drag-and-drop. */
@@ -137,6 +247,8 @@ export function bindDashboard(){
  $("#dash-skin")?.addEventListener("change",e=>{d.skin=e.target.value;save();});
  $("#dash-edit")?.addEventListener("click",()=>{view.editLayout=!view.editLayout;render();});
  $("#dash-reset")?.addEventListener("click",()=>{if(!confirm("Put every block back in its original place and show all of them?"))return;d.order=[];d.hidden=[];save();});
+ $$("[data-fine-mode]").forEach(b=>b.onclick=()=>{d.fineTogether=b.dataset.fineMode==="together";save();});
+ $("#mk-add")?.addEventListener("click",()=>{const v=id=>$("#"+id)?.value;const err=addEntry({board:v("mk-board"),date:v("mk-date"),type:v("mk-type"),who:v("mk-who"),amount:v("mk-amt"),note:v("mk-note")});if(err&&$("#mk-err"))$("#mk-err").textContent=err;});
  $$("[data-dtab]").forEach(b=>b.onclick=()=>{view.dashTab=b.dataset.dtab;render();});
  $$("[data-jump]").forEach(b=>b.onclick=()=>document.getElementById("blk-"+b.dataset.jump)?.scrollIntoView({behavior:"smooth",block:"start"}));
  $$("[data-owed]").forEach(b=>b.onclick=()=>owedDetail(b.dataset.owed));

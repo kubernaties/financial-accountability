@@ -94,3 +94,12 @@
   align-items: center;
   gap: 10px;
 }
+
+/* Fold-away sidebar groups */
+.nav-group{border-radius:10px}
+.nav-group>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-top:6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-radius:8px;min-height:40px}
+.nav-group>summary::-webkit-details-marker{display:none}
+.nav-group>summary::after{content:"▾";transition:transform .15s}
+.nav-group:not([open])>summary::after{transform:rotate(-90deg)}
+.nav-group>summary:hover{background:var(--panel-2);color:var(--text)}
+.nav-group>.nav-button{display:block;width:100%;margin-bottom:3px}

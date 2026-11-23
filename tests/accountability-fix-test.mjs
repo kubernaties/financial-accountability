@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+globalThis.localStorage={getItem:()=>null,setItem(){},removeItem(){}};globalThis.window=globalThis;globalThis.document={querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){},body:{}};globalThis.addEventListener=()=>{};
+const {state}=await import('../js/core/store.js');const B=await import('../js/finance/boards.js');
+const r=o=>({status:'Recorded',timestamp:'2026-11-23T00:00:00Z',...o});
+state.collections.push(r({id:'main-a',collectionDate:'2026-11-18',category:'Monthly fees',amount:1300}),r({id:'main-b',collectionDate:'2026-11-22',category:'Monthly fees',amount:1500}),r({id:'fine-a',collectionDate:'2026-11-18',category:'Fines',amount:630}));
+state.expenses.push(r({id:'main-exp',date:'2026-11-23',category:'Expense',amount:20,actualPayer:'You',fundedBy:'Regular fund'}));
+state.handovers.push(r({id:'overgive',date:'2026-11-23',amount:3000,fund:'Regular fund',status:'Pending'}));
+state.custom.push(r({id:'fine-take',date:'2026-11-01',amount:150,label:'Karim sir took money',direction:'Someone owes me',fund:'Fine fund',party:'Karim sir',returns:[]}));
+const C=await import('../js/finance/calculations.js');
+const main=B.boardTotals(B.BOARDS[0]),fine=B.boardTotals(B.BOARDS[1]);
+assert.equal(main.should,2780);assert.equal(main.given,3000);assert.equal(main.still,0);assert.equal(main.overGiven,220);assert.equal(main.cash,0);assert.equal(main.cashRaw,-220);
+assert.equal(fine.should,630);assert.equal(fine.still,630);assert.equal(fine.cash,480);assert.equal(fine.takenOut,150);
+assert.equal(B.mustGivePrincipal(),630);assert.equal(B.obligations().totals.owedMe,150);assert.equal(C.moneyInHand(),480);
+console.log('accountability example math OK');

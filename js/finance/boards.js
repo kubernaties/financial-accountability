@@ -123,15 +123,19 @@ export function boardMonth(board,month){
   const rows=inM.filter(e=>e.d===d);run=R2(run+sumBy(rows,e=>e.cash));
   return {d,rows,spent:sumBy(rows.filter(e=>EXPENSE_KINDS.includes(e.k)),e=>e.v),left:run};
  });
- return {board,month,open:{cash:open.cash,still:R2(open.should-open.given)},
+ const still=Math.max(0,R2(all.should-all.given)),overGiven=Math.max(0,R2(all.given-all.should));
+ const cashRaw=all.cash, cash=Math.max(0,R2(cashRaw)),shortfall=Math.max(0,R2(-cashRaw));
+ const takenOut=customOutstandingTotal(board.fund);
+ return {board,month,open:{cash:Math.max(0,open.cash),cashRaw:open.cash,shortfall:Math.max(0,-open.cash),still:Math.max(0,R2(open.should-open.given)),overGiven:Math.max(0,R2(open.given-open.should))},
   had:sumBy(inM.filter(e=>INCOME_KINDS.includes(e.k)),e=>e.v),
   spent:sumBy(inM.filter(e=>EXPENSE_KINDS.includes(e.k)),e=>e.v),
-  given:sumBy(inM,e=>e.given),cash:all.cash,should:all.should,givenAll:all.given,still:R2(all.should-all.given),
+  given:sumBy(inM,e=>e.given),cash,cashRaw,shortfall,should:all.should,givenAll:all.given,still,overGiven,takenOut,unexplained:0,
   days,neg:days.filter(x=>x.left<-0.005).map(x=>x.d),upto};
 }
 /** Everything, all dates, both boards. */
-export function boardTotals(board){const t=totalOf(events(board.fund));return {...t,still:R2(t.should-t.given)};}
-export function mustGivePrincipal(){return Math.max(0,R2(BOARDS.reduce((n,b)=>n+boardTotals(b).still,0)));}
+function customOutstandingTotal(fund){return customList().filter(c=>c.fund===fund&&c.direction==="Someone owes me").reduce((n,c)=>n+customOutstanding(c),0)+holdList().filter(h=>h.fund===fund).reduce((n,h)=>n+holdOutstanding(h),0)+(fund===REG?active(state.advances).reduce((n,a)=>n+Math.max(0,num(a.amount)-num(a.returned)-sumBy(a.repayments||[],r=>num(r.amount))),0):0);}
+export function boardTotals(board){const t=totalOf(events(board.fund));return {...t,cashRaw:t.cash,cash:Math.max(0,t.cash),shortfall:Math.max(0,R2(-t.cash)),still:Math.max(0,R2(t.should-t.given)),overGiven:Math.max(0,R2(t.given-t.should)),takenOut:customOutstandingTotal(board.fund),unexplained:0};}
+export function mustGivePrincipal(){return R2(BOARDS.reduce((n,b)=>n+Math.max(0,R2(boardTotals(b).should-boardTotals(b).given)),0));}
 
 /** Group the effect of events by type, for the "how is this calculated" window. */
 export function breakdown(events_,field){

@@ -3,6 +3,7 @@
  */
 import {state} from "../core/store.js";
 import {$, money, num, sum} from "../core/utils.js";
+import {BOARDS, boardTotals} from "./boards.js";
 import {PERS, advanceNetOut, customList, customOutstanding, fineRestoredByAdjustment, fundFlow, fundList, handoverTotal, moneyInHand, owedToOthers} from "./calculations.js";
 
 export function glanceData(){
@@ -18,6 +19,7 @@ export function glanceData(){
  fundList().forEach(f=>{const l=fundFlow(f).left;if(l<-0.005)warn.push(`${f} is overspent by ${money(-l)}.`);});
  if(last&&Math.abs(last.diff)>0.005)warn.push(`Last cash count (${last.at.slice(0,10)}) was ${last.diff<0?"short":"over"} by ${money(Math.abs(last.diff))}. Investigate; nothing was adjusted.`);
  if(!last)warn.push("Cash has never been physically counted. Count it to compare with the expected amount.");
- return {recv,spent,spentX,given,pers,persOut,hold,hand,adv,fra,cash,placed,diff,last,iOweOthers,warn,
+ const cashMain=boardTotals(BOARDS[0]).cash,cashFine=boardTotals(BOARDS[1]).cash;
+ return {recv,spent,spentX,given,pers,persOut,hold,hand,adv,fra,cash,cashMain,cashFine,placed,diff,last,iOweOthers,warn,
   parts:[["Cash with me",cash,"cash"],["Spent (expenses only)",spentX,"spent"],["Given to people (they owe me)",given,"given"],["My personal take",pers,"pers"],["Given to principal",hand,"hand"],["Held by others (waiting for voucher)",hold,"hold"],["Advances with others",adv,"adv"],["Fine restored by adjustment",fra,"adj"]]};
 }

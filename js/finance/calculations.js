@@ -46,7 +46,7 @@ export function fundFlow(f){let inn=0,out=0,back=0,hold=0,tin=0,tout=0;
  holdList().filter(h=>h.fund===f).forEach(h=>{hold+=holdOutstanding(h);});
  transferList().forEach(t=>{if(t.to===f)tin+=num(t.amount);if(t.from===f)tout+=num(t.amount);});
  return {inn,out,hold,tin,tout,left:inn-out-hold+tin-tout,back};}
-export function moneyInHand(){return fundList().reduce((n,f)=>n+fundFlow(f).left,0)-handoverTotal()-advanceNetOut()-fineRestoredByAdjustment();}
+export function moneyInHand(){return fundList().reduce((n,f)=>{const handed=active(state.handovers).filter(h=>(h.fund===FINE?FINE:REG)===f).reduce((v,h)=>v+num(h.amount),0),adv=f===REG?advanceNetOut():0,adjust=f===FINE?fineRestoredByAdjustment():0;return n+Math.max(0,fundFlow(f).left-handed-adv-adjust);},0);}
 export const holdList=()=>active(state.holds||[]);
 export const holdSettled=h=>sum(active(state.expenses).filter(x=>x.holdId===h.id));
 export const holdReturned=h=>sum(h.returns||[],"amount");

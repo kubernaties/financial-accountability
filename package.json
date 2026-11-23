@@ -11,7 +11,9 @@
     "test:dashboard": "node tests/dashboard-styles-test.mjs",
     "test:logs": "node tests/logs-test.mjs",
     "test:theme": "node tests/theme-auto-test.mjs",
-    "test": "node scripts/check-syntax.mjs && node tests/smoke-test.mjs > /dev/null && node tests/robustness-test.mjs && node tests/logs-test.mjs > /dev/null && node tests/theme-auto-test.mjs > /dev/null && node tests/dashboard-styles-test.mjs > /dev/null"
+    "test": "node scripts/check-syntax.mjs && node tests/smoke-test.mjs > /dev/null && node tests/robustness-test.mjs && node tests/logs-test.mjs > /dev/null && node tests/theme-auto-test.mjs > /dev/null && node tests/dashboard-styles-test.mjs > /dev/null && node tests/accountability-fix-test.mjs"
   },
-  "engines": {"node": ">=18"}
+  "engines": {
+    "node": ">=18"
+  }
 }

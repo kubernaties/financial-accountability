@@ -58,3 +58,8 @@
 @media print {
   .bd-quick, .bd-actions, .bd-nav button { display: none !important; }
 }
+.bd-summary { margin-top: 12px; padding: 12px; border: 1px solid var(--line, #ddd); border-radius: 10px; display: grid; gap: 5px; font-size: .94rem; }
+.bd-summary > strong { margin-bottom: 4px; }
+.bd-summary > div { display: flex; justify-content: space-between; gap: 12px; }
+.bd-summary .bd-unexplained { color: #7b35b4; font-weight: 600; }
+.bd-purple-t { color: #7b35b4; }

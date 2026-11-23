@@ -175,7 +175,7 @@ function mockGlance(){
  <div class="card mkg"><h3>Where is every taka?</h3>
   <div class="gl-bar" role="img" aria-label="Money distribution">${parts.map(p=>`<span class="seg mkg-${p[2]}" style="width:${(Math.max(0,p[1])/tot*100).toFixed(2)}%" title="${esc(p[0])} ${m(p[1])}"></span>`).join("")}</div>
   <div class="gl-legend">${parts.map(p=>`<span><i class="dot mkg-${p[2]}"></i>${esc(p[0])}: <strong>${m(p[1])}</strong></span>`).join("")}</div>
-  <div class="mkg-grid">${c("received","Total received",g.recv,"All boards")}${c("spent","Spent",g.spentX,"Expenses only")}${c("cash","Cash with me",g.cash,"Expected")}${c("hand","Given to principal",g.hand,"All boards")}${c("owedprin","Still need to give",mustGivePrincipal(),"Should give "+m(should))}${c("owedme","Owed to me",owedMe,"Loans and change")}${c("iowe","I owe others",g.iOweOthers,"Teachers, change")}${c("hold","Waiting for voucher",g.hold,"Not an expense yet")}${c("pers","My personal take",g.persOut,"Must put back")}</div>
+  <div class="mkg-grid">${c("received","Total received",g.recv,"All boards")}${c("spent","Spent",g.spentX,"Expenses only")}${c("cash","Cash with me",g.cash,`Main ${m(g.cashMain)} · Fine ${m(g.cashFine)}`)}${c("hand","Given to principal",g.hand,"All boards")}${c("owedprin","Still need to give",mustGivePrincipal(),"Should give "+m(should))}${c("owedme","Owed to me",owedMe,"Loans and change")}${c("iowe","I owe others",g.iOweOthers,"Teachers, change")}${c("hold","Waiting for voucher",g.hold,"Not an expense yet")}${c("pers","My personal take",g.persOut,"Must put back")}</div>
  </div>`;
 }
 

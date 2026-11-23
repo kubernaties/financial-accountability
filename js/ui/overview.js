@@ -27,7 +27,7 @@ export function glance(){
    ${c("received","Total received",g.recv,"All money in, all funds")}
    ${c("spent","Spent from funds",g.spentX,"Expenses only. Money given to people is not counted here","out")}
    ${c("given","Given to people",g.given,"Taken from a fund, someone owes it back","out")}
-   ${c("cash","Cash with me (expected)",g.cash,g.last?`Counted ${m(g.last.counted)} on ${g.last.at.slice(0,10)}`:"Never counted","hl")}
+  cash:["Cash with me (expected)","All funds left minus handovers, advances, and adjustments. Main "+m(g.cashMain)+" · Fine "+m(g.cashFine)+". Expected physical cash."] ,
    ${c("hand","Given to principal",g.hand,"Held by the principal")}
    ${c("pers","My personal take",g.persOut,"Money I took for myself. Must be put back","out")}
    ${c("hold","Held by others",g.hold+g.adv,`Waiting for voucher ${m(g.hold)} · Advances ${m(g.adv)}`)}
@@ -43,7 +43,7 @@ export function glanceDetail(k){
  const g=glanceData(),m=money,F={
   received:["Total received","Money in across Regular, Fine and Principal's funds: collections, fines, restored fine money and custom 'money in' entries."],
   spent:["Spent from funds","Expenses you paid from a fund, teacher reimbursements you paid, and custom 'money out'. Money given and waiting for a voucher is NOT counted."],
-  cash:["Cash with me (expected)",`All funds left − given to principal (${m(g.hand)}) − advances out (${m(g.adv)})${g.fra?` − fine restored by adjustment (${m(g.fra)})`:""}. This is what you should physically hold.`],
+  cash:["Cash with me (expected)","All funds left minus handovers, advances, and adjustments. Main "+m(g.cashMain)+" · Fine "+m(g.cashFine)+". Expected physical cash."] ,
   given:["Given to people","Custom entries where someone owes you, taken from a fund. Not an expense."],
   hand:["Given to principal","Sum of all active handovers."],hold:["Held by others","Money given to someone pending voucher, plus advances not yet returned or spent."],
   owedme:["Owed to me","Principal owes me + others owe me + money waiting for a voucher."],iowe:["I owe others","Teacher-paid expenses not reimbursed + custom 'I owe someone' entries still outstanding."],

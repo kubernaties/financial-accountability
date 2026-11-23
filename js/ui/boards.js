@@ -3,8 +3,9 @@
  * finish accountability, who owes whom, and a detail window for every row and card.
  */
 import {persist, state} from "../core/store.js";
+import {toast} from "../core/feedback.js";
 import {$, $$, esc, money, today} from "../core/utils.js";
-import {BOARDS, EXPENSE_KINDS, KINDS, boardMonth, breakdown, closeId, closeRec, eventByKey, obligations} from "../finance/boards.js";
+import {BOARDS, EXPENSE_KINDS, KINDS, boardMonth, boardTotals, breakdown, closeId, closeRec, eventByKey, obligations} from "../finance/boards.js";
 import {openCustomReturn, openHoldReturn, openHoldSettle, openModal, openReimbursement, openRepayment, voidRecord} from "./forms/index.js";
 import {view} from "./view-state.js";
 import {render} from "./shell.js";
@@ -59,7 +60,7 @@ function obligationsHtml(){
 export function boardsSection(){
  const m=month(),bms=BOARDS.map(b=>boardMonth(b,m)),sh=bms.reduce((n,x)=>n+x.still,0),gv=bms.reduce((n,x)=>n+x.givenAll,0),st=sh;
  const quick=(label,kind,p)=>`<button class="btn" data-modal="${kind}" ${Object.entries(p).map(([k,v])=>`data-preset-${k}="${esc(v)}"`).join(" ")}>${label}</button>`;
- return `<section class="bd-section"><div class="bd-nav"><div class="actions"><button class="btn small" data-bd-month="-1" aria-label="Previous month">‹</button><strong class="bd-month">${esc(monthName(m))}</strong><button class="btn small" data-bd-month="1" aria-label="Next month">›</button><button class="btn small" data-bd-month="0">This month</button></div><button class="btn small" data-print>Print / PDF</button></div>
+ return `<section class="bd-section"><div class="bd-nav"><div class="actions"><button class="btn small" data-bd-month="-1" aria-label="Previous month">‹</button><strong class="bd-month">${esc(monthName(m))}</strong><button class="btn small" data-bd-month="1" aria-label="Next month">›</button><button class="btn small" data-bd-month="0">This month</button></div><div class="actions"><button class="btn small" data-copy-money-log title="Copy a full money report to paste for support">Copy money log</button><button class="btn small" data-print>Print / PDF</button></div></div>
  <div class="bd-quick actions">
   <button class="btn primary" data-modal="collection">+ Collection</button><button class="btn primary" data-modal="expense">+ Expense</button>
   ${quick("Someone took money","custom",{direction:"Someone owes me",fund:"Regular fund",party:"Other"})}
@@ -142,6 +143,59 @@ function reopen(id){
  const before=JSON.stringify(r);r.status="Open";r.updatedAt=new Date().toISOString();
  persist("Accountability reopened",r.id,before,JSON.stringify(r),`${b.title} ${m}`);render();
 }
+/** Full text report of money in/out for copy-paste support. */
+export function moneyFlowLog(){
+ const m=month(),lines=[];
+ lines.push("=== Financial Accountability — Money Log ===");
+ lines.push("Generated: "+new Date().toISOString());
+ lines.push("Month: "+monthName(m));
+ lines.push("");
+ BOARDS.forEach(b=>{
+  const bm=boardMonth(b,m),bt=boardTotals(b);
+  lines.push("--- "+b.title+" ---");
+  lines.push("Received (this month): "+money(bm.had));
+  lines.push("Expenses (this month): "+money(bm.spent));
+  lines.push("Cash on hand: "+money(bm.cash));
+  lines.push("Should give: "+money(bm.should));
+  lines.push("Given to principal: "+money(bm.givenAll));
+  lines.push("Still to give: "+money(bm.still));
+  lines.push("Over-given: "+money(bm.overGiven));
+  lines.push("Lifetime total received: "+money(bt.received||0)+" · lifetime spent: "+money(bt.spent||0));
+  lines.push("Entries this month:");
+  bm.days.forEach(d=>{
+   d.rows.forEach(e=>{
+    lines.push("  "+e.d+" | "+(KINDS[e.k]?KINDS[e.k][0]:e.k)+" | "+e.desc+(e.who?" ("+e.who+")":"")+" | amt "+e.v+" cash "+e.cash+" should "+e.should+" given "+e.given);
+   });
+  });
+  if(!bm.days.length)lines.push("  (none)");
+  lines.push("");
+ });
+ const o=obligations();
+ lines.push("--- Owed to me ---");
+ o.owedMe.forEach(x=>lines.push("  "+x.name+" | "+x.kind+" | "+x.fund+" | "+money(x.amount)+(x.sub?" | "+x.sub:"")));
+ if(!o.owedMe.length)lines.push("  (none)");
+ lines.push("--- I owe others ---");
+ o.iOwe.forEach(x=>lines.push("  "+x.name+" | "+x.kind+" | "+x.fund+" | "+money(x.amount)+(x.sub?" | "+x.sub:"")));
+ if(!o.iOwe.length)lines.push("  (none)");
+ lines.push("--- Personal withdrawals ---");
+ o.personal.forEach(x=>lines.push("  "+x.name+" | "+money(x.amount)));
+ if(!o.personal.length)lines.push("  (none)");
+ lines.push("");
+ lines.push("--- Raw counts ---");
+ lines.push("collections="+state.collections.length+" expenses="+state.expenses.length+" handovers="+state.handovers.length+" custom="+state.custom.length+" holds="+(state.holds||[]).length+" adjustments="+state.adjustments.length);
+ (state.expenses||[]).slice(0,30).forEach(x=>lines.push("  EXP "+(x.date||"?")+" "+x.amount+" payer="+(x.actualPayer||"?")+" fund="+(x.fundedBy||"?")+" status="+(x.status||"?")+" · "+(x.description||x.category||"")));
+ return lines.join("\n");
+}
+async function copyMoneyLog(){
+ const text=moneyFlowLog();
+ try{
+  if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(text);
+  else{const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();}
+  toast("Money log copied. Paste it here to get help.");
+ }catch{
+  modal("Money log",`<pre class="log-pre" style="white-space:pre-wrap;max-height:50vh;overflow:auto">${esc(text)}</pre>`,[{label:"Select all",run:()=>{}}]);
+ }
+}
 export function bindBoards(){
  $$("[data-bd-month]").forEach(b=>b.onclick=()=>{const d=Number(b.dataset.bdMonth);view.boardMonth=d===0?today().slice(0,7):shift(month(),d);render();});
  $$("[data-ev]").forEach(b=>b.onclick=()=>eventDetail(b.dataset.ev));
@@ -149,4 +203,5 @@ export function bindBoards(){
  $$("[data-calc]").forEach(b=>b.onclick=()=>{const [id,w]=b.dataset.calc.split(":");calcDetail(id,w);});
  $$("[data-bd-close]").forEach(b=>b.onclick=()=>finish(b.dataset.bdClose));
  $$("[data-bd-reopen]").forEach(b=>b.onclick=()=>reopen(b.dataset.bdReopen));
+ $$("[data-copy-money-log]").forEach(b=>b.onclick=()=>copyMoneyLog());
 }

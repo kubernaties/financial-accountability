@@ -17,13 +17,16 @@ export const boardById=id=>BOARDS.find(b=>b.id===id)||BOARDS[0];
 /** kind -> [label, colour name]. */
 export const KINDS={
  in:["Collection","green"],fin:["Fine collected","green"],mi:["Money in","green"],
- ex:["Expense","red"],mo:["Money out","red"],tp:["Teacher paid","grey"],rb:["Teacher paid back","red"],rp:["Principal paid the teacher","grey"],
+ ex:["Expense","red"],mo:["Money out","red"],tp:["Teacher paid (college expense)","grey"],px:["My personal money (college expense)","pink"],
+ rb:["Teacher paid back","red"],rp:["Principal paid the teacher","grey"],
  pp:["Paid by principal","grey"],vr:["Voucher received","grey"],hd:["Money on hold","amber"],hr:["Held money returned","green"],
  lt:["Someone took money","teal"],lr:["Money came back","green"],ow:["Money I owe","grey"],op:["I paid it back","red"],
  per:["I took personal money","pink"],pr:["Personal money put back","green"],gp:["Given to principal","blue"],
  tr:["Moved between funds","grey"],fr:["Fine restored (adjustment)","grey"],adv:["Advance given","amber"],ar:["Advance returned","green"],adj:["Principal owes me","grey"]
 };
-export const EXPENSE_KINDS=["ex","tp","vr"];
+export const EXPENSE_KINDS=["ex","tp","px","vr"];
+/** Payers who used outside money for a college expense (college still owes them). */
+export const isOutsidePayer=p=>p==="Teacher"||p==="Me (personal money)"||p==="Personal";
 const INCOME_KINDS=["in","fin","mi"];
 const R2=n=>Math.round(n*100)/100;
 const sumBy=(l,f)=>R2(l.reduce((n,e)=>n+f(e),0));
@@ -54,9 +57,11 @@ export function events(fund){
   if(fundOf(x)!==fund)return;const a=num(x.amount);
   const base={who:x.actualPayer||"",desc:x.description||x.category||"Expense",cat:x.category||"Uncategorised",src:x,sk:"expense",sourceCollectionId:x.sourceCollectionId||"",ts:x.timestamp};
   if(x.holdId)add("vr",dOf(x,"date"),a,{...base,who:"",should:-a});
+  // Outside money for college: still a college expense (reduces still-to-give); fund cash does not move.
   else if(x.actualPayer==="Teacher")add("tp",dOf(x,"date"),a,{...base,should:-a});
+  else if(x.actualPayer==="Me (personal money)"||x.actualPayer==="Personal")add("px",dOf(x,"date"),a,{...base,who:"Me (personal)",should:-a});
   else if(x.actualPayer==="Principal")add("pp",dOf(x,"date"),a,base);
-  else add("ex",dOf(x,"date"),a,{...base,cash:-a,should:-a});
+  else add("ex",dOf(x,"date"),a,{...base,cash:-a,should:-a}); // You paid from fund cash
  });
  const liveExp=new Map(active(state.expenses).map(x=>[x.id,x]));
  (state.reimbursements||[]).forEach(r=>{
@@ -134,7 +139,12 @@ export function boardMonth(board,month){
 }
 /** Everything, all dates, both boards. */
 function customOutstandingTotal(fund){return customList().filter(c=>c.fund===fund&&c.direction==="Someone owes me").reduce((n,c)=>n+customOutstanding(c),0)+holdList().filter(h=>h.fund===fund).reduce((n,h)=>n+holdOutstanding(h),0)+(fund===REG?active(state.advances).reduce((n,a)=>n+Math.max(0,num(a.amount)-num(a.returned)-sumBy(a.repayments||[],r=>num(r.amount))),0):0);}
-export function boardTotals(board){const t=totalOf(events(board.fund));return {...t,cashRaw:t.cash,cash:Math.max(0,t.cash),shortfall:Math.max(0,R2(-t.cash)),still:Math.max(0,R2(t.should-t.given)),overGiven:Math.max(0,R2(t.given-t.should)),takenOut:customOutstandingTotal(board.fund),unexplained:0};}
+export function boardTotals(board){
+ const ev=events(board.fund),t=totalOf(ev);
+ const spent=sumBy(ev.filter(e=>EXPENSE_KINDS.includes(e.k)),e=>e.v);
+ const received=sumBy(ev.filter(e=>INCOME_KINDS.includes(e.k)),e=>e.v);
+ return {...t,received,spent,cashRaw:t.cash,cash:Math.max(0,t.cash),shortfall:Math.max(0,R2(-t.cash)),still:Math.max(0,R2(t.should-t.given)),overGiven:Math.max(0,R2(t.given-t.should)),takenOut:customOutstandingTotal(board.fund),unexplained:0};
+}
 export function mustGivePrincipal(){return R2(BOARDS.reduce((n,b)=>n+Math.max(0,R2(boardTotals(b).should-boardTotals(b).given)),0));}
 
 /** Group the effect of events by type, for the "how is this calculated" window. */
@@ -160,12 +170,15 @@ export function obligations(){
   if(o>0)add(owedMe,{name:a.recipient||"Someone",sub:"Advance",amount:o,fund:REG,date:a.date||"",kind:"Advance",sk:"advance",src:a});
  });
  active(state.adjustments).filter(a=>a.credit==="Principal payable"&&num(a.amount)>0).forEach(a=>add(owedMe,{name:"Principal",sub:"Adjustment",amount:num(a.amount),fund:REG,date:a.date||"",kind:"Principal owes me",netted:true,sk:"adjustment",src:a}));
- active(state.expenses).filter(x=>x.actualPayer==="Teacher").forEach(x=>{
+ active(state.expenses).forEach(x=>{
   const o=Math.max(0,num(x.amount)-num(x.reimbursedAmount));
-  if(o>0)add(iOwe,{name:"Teacher",sub:x.description||x.category||"Expense",amount:o,fund:fundOf(x),date:x.date||"",kind:"Teacher paid",sk:"expense",src:x});
+  if(o<=0)return;
+  if(x.actualPayer==="Teacher")add(iOwe,{name:x.personName||"Teacher",sub:x.description||x.category||"College expense",amount:o,fund:fundOf(x),date:x.date||"",kind:"Teacher paid for college",sk:"expense",src:x});
+  // Your personal money used for college → college owes you (not a personal withdrawal)
+  else if(x.actualPayer==="Me (personal money)"||x.actualPayer==="Personal")add(owedMe,{name:"College / Principal",sub:x.description||x.category||"Paid from my personal money",amount:o,fund:fundOf(x),date:x.date||"",kind:"Personal money for college",sk:"expense",src:x,netted:true});
  });
  const t=l=>R2(l.filter(x=>!x.netted).reduce((n,x)=>n+x.amount,0));
- return {owedMe,iOwe,personal,totals:{owedMe:t(owedMe),iOwe:t(iOwe),personal:t(personal)}};
+ return {owedMe,iOwe,personal,totals:{owedMe:t(owedMe)+R2(owedMe.filter(x=>x.netted).reduce((n,x)=>n+x.amount,0)),iOwe:t(iOwe),personal:t(personal)}};
 }
 
 /** Accountability records: one per month and board, kept in state.boardClose (merged additively when syncing). */

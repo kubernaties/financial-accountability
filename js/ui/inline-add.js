@@ -10,7 +10,18 @@ import {FINE, PERS, REG} from "../finance/calculations.js";
 import {collectionKey, forms} from "./forms/definitions.js";
 import {render} from "./shell.js";
 
-export const ENTRY_TYPES=[["collection","Collection"],["expense","Expense"],["handover","Given to principal"],["hold","Money on hold (no voucher)"],["took","Someone took money"],["changeOwed","Change owed to me"],["changeIowe","Change I owe"],["personal","I took personal money"]];
+export const ENTRY_TYPES=[
+ ["collection","Collection"],
+ ["expense","Expense (from fund cash)"],
+ ["expensePersonal","Expense (my personal money — college owes me)"],
+ ["expenseTeacher","Expense (teacher paid — college owes teacher)"],
+ ["handover","Given to principal"],
+ ["hold","Money on hold (no voucher)"],
+ ["took","Someone took money"],
+ ["changeOwed","Change owed to me"],
+ ["changeIowe","Change I owe"],
+ ["personal","I took personal money (must put back)"]
+];
 
 /** Returns "" when saved, or a short message to show next to the button. */
 export function addEntry({board,date,type,who,amount,note}){
@@ -22,6 +33,8 @@ export function addEntry({board,date,type,who,amount,note}){
  let kind,d;
  if(type==="collection")[kind,d]=["collection",{amount:amt,collectionDate:date,person:name,category:board==="fine"?"Fines":"Other income",description:text,paymentMethod:"Cash",personName:name}];
  else if(type==="expense")[kind,d]=["expense",{amount:amt,date,category:state.categories.includes("Other")?"Other":(state.categories[0]||"Other"),description:text,actualPayer:"You",fundUsed:fund,fundedBy:fund,paymentMethod:"Cash"}];
+ else if(type==="expensePersonal")[kind,d]=["expense",{amount:amt,date,category:state.categories.includes("Other")?"Other":(state.categories[0]||"Other"),description:text||"Paid from my personal money for college",actualPayer:"Me (personal money)",fundUsed:fund,fundedBy:fund,paymentMethod:"Cash"}];
+ else if(type==="expenseTeacher")[kind,d]=["expense",{amount:amt,date,category:state.categories.includes("Other")?"Other":(state.categories[0]||"Other"),description:text||"Teacher paid for college (no cash in hand)",actualPayer:"Teacher",personName:name||"Teacher",fundUsed:fund,fundedBy:fund,paymentMethod:"Cash"}];
  else if(type==="handover")[kind,d]=["handover",{amount:amt,date,recipient:name||"Principal",fund,paymentMethod:"Cash",collectionDates:[],allocated:false,status:"Pending"}];
  else if(type==="hold")[kind,d]=["hold",{recipient:name||"Someone",amount:amt,date,fund,purpose:text||"Money given, waiting for voucher"}];
  else if(type==="took")[kind,d]=custom("Someone owes me",text||"Took money, will return",name);

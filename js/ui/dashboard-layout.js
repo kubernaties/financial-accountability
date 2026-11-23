@@ -204,18 +204,23 @@ function smartHtml(){
 
 /** "Where is every taka?" exactly as in the design: banners first, then the bar, legend and nine figure cards. */
 function mockGlance(){
- const board=view.dashboardBoard||"main",fund=board==="fine"?FINE:REG,bt=boardTotals(BOARDS.find(x=>x.id===board)),flow=fundFlow(fund),m=money;
- const title=board==="fine"?"Fine":"Main",cash=bt.cash,spent=bt.spent,given=bt.givenAll,still=bt.still,over=bt.overGiven,should=bt.should;
+ const board=view.dashboardBoard||"main",fund=board==="fine"?FINE:REG,b=BOARDS.find(x=>x.id===board),bt=boardTotals(b),m=money;
+ const title=board==="fine"?"Fine":"Main";
+ // Use one consistent source (board events) so income, expenses, cash, given and over-given always agree.
+ const received=bt.received||0,spent=bt.spent||0,cash=bt.cash,given=bt.given||0,still=bt.still,over=bt.overGiven,should=bt.should;
  const owed=owedRows().filter(r=>r.fund===fund&&!r.key.startsWith("p:")).reduce((n,r)=>n+r.amount,0);
  const parts=[["Cash in this board",cash,"c1"],["Spent",spent,"c2"],["Given to principal",given,"c3"],["Owed back to me",owed,"c5"]];
  const tot=Math.max(1,parts.reduce((n,p)=>n+Math.max(0,p[1]),0));
- const c=(l,v,sub,cls="")=>`<div class="gl-card ${cls}"><span class="card-label">${l}</span><strong>${m(v)}</strong><span class="card-sub">${esc(sub)}</span></div>`;
+ const c=(l,v,sub,cls="",calc="")=>`<button type="button" class="gl-card ${cls}"${calc?` data-calc="${calc}"`:""}><span class="card-label">${l}</span><strong>${m(v)}</strong><span class="card-sub">${esc(sub)}</span></button>`;
  const toggle=`<div class="mk-board-switch" role="tablist" aria-label="Choose board"><button class="btn ${board==="main"?"primary":""}" data-board-overview="main" role="tab" aria-selected="${board==="main"}">Main</button><button class="btn ${board==="fine"?"primary":""}" data-board-overview="fine" role="tab" aria-selected="${board==="fine"}">Fine</button></div>`;
- const remaining=over>0?c("Principal owes me (over-given)",over,"Principal must return this amount","amber"):c("Still to give principal",still,`Should give ${m(should)} · Already given ${m(given)}`);
+ const remaining=over>0
+  ?c("Principal owes me (over-given)",over,`You handed over ${m(given)} but only ${m(Math.max(0,should))} was due · difference ${m(over)}`,"amber",`${b.id}:still`)
+  :c("Still to give principal",still,`Should give ${m(should)} · Already given ${m(given)}`,"",`${b.id}:still`);
  return `${toggle}<div class="card mkg"><h3>Where is every taka? · ${title}</h3>
   <div class="gl-bar" role="img" aria-label="${title} money distribution">${parts.map(p=>`<span class="seg mkg-${p[2]}" style="width:${(Math.max(0,p[1])/tot*100).toFixed(2)}%" title="${esc(p[0])} ${m(p[1])}"></span>`).join("")}</div>
   <div class="gl-legend">${parts.map(p=>`<span><i class="dot mkg-${p[2]}"></i>${esc(p[0])}: <strong>${m(p[1])}</strong></span>`).join("")}</div>
-  <div class="mkg-grid">${c(`${title} income`,flow.inn,`Collected into ${title} only`)}${c(`${title} expenses`,spent,"Expenses from this board only")}${c(`${title} cash`,cash,"Cash belonging to this board only")}${c("Given to principal",given,`${title} board only`)}${remaining}${c("People owe me",owed,`${title} money lent / held by others`)}</div>
+  <div class="mkg-grid">${c(`${title} income`,received,`Collected into ${title} only`,"",`${b.id}:had`)}${c(`${title} expenses`,spent,"Expenses from this board only (you / teacher / voucher)","",`${b.id}:spent`)}${c(`${title} cash`,cash,"Cash belonging to this board only","",`${b.id}:cash`)}${c("Given to principal",given,`${title} board only`,"",`${b.id}:given`)}${remaining}${c("People owe me",owed,`${title} money lent / held by others`)}</div>
+  <p class="card-sub" style="margin-top:10px">Tap any figure for the line-by-line breakdown. Expenses only count when the payer is You, Teacher, or a settled voucher — not money given on hold or personal withdrawals.</p>
  </div>`;
 }
 

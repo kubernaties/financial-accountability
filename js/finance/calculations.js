@@ -7,7 +7,9 @@ import {active, money, num, sum} from "../core/utils.js";
 export function regularCollections(){return sum(active(state.collections).filter(x=>x.category!=="Fines")); }
 export function fineCollections(){return sum(active(state.collections).filter(x=>x.category==="Fines")); }
 export function expenseTotal(){return sum(active(state.expenses))+sum(customList().filter(c=>c.direction==="Money out"&&c.countsExpense==="Yes"));}
-export function cashPaidExpenses(){return sum(active(state.expenses).filter(x=>x.actualPayer==="You")); }
+export function cashPaidExpenses(){return sum(active(state.expenses).filter(x=>x.actualPayer==="You"||!x.actualPayer)); }
+/** College expenses you paid from personal money — college still owes you. */
+export function personalPaidExpensesOutstanding(){return sum(active(state.expenses).filter(x=>(x.actualPayer==="Me (personal money)"||x.actualPayer==="Personal")&&!["Paid","N/A"].includes(x.reimbursementStatus||"")).map(x=>({amount:Math.max(0,num(x.amount)-num(x.reimbursedAmount))})));}
 export function handoverTotal(){return sum(active(state.handovers));}
 export function advanceOutstanding(){return sum(active(state.advances).map(a=>({amount:Math.max(0,num(a.amount)-num(a.returned)-num(a.spent)-sum(a.repayments||[], "amount"))})));}
 export function owedToOthers(){return sum(active(state.expenses).filter(x=>x.actualPayer==="Teacher"&&!["Paid","N/A"].includes(x.reimbursementStatus||"")).map(x=>({amount:Math.max(0,num(x.amount)-num(x.reimbursedAmount))})));}
@@ -56,7 +58,7 @@ export const holdStatus=h=>{if(["Void","Voided","Reversed"].includes(h.status))r
  if(o>0)return holdSettled(h)||holdReturned(h)?"Partly settled":"Pending voucher";
  return holdSettled(h)?"Settled":"Returned";};
 export const transferList=()=>active(state.transfers||[]);
-export function principalOwesYou(){return sum(active(state.adjustments).filter(a=>a.credit==="Principal payable"))+sum(customList().filter(c=>c.direction==="Someone owes me"&&c.party==="Principal").map(c=>({amount:customOutstanding(c)})));}
+export function principalOwesYou(){return sum(active(state.adjustments).filter(a=>a.credit==="Principal payable"))+sum(customList().filter(c=>c.direction==="Someone owes me"&&c.party==="Principal").map(c=>({amount:customOutstanding(c)})))+personalPaidExpensesOutstanding();}
 export function othersOweYou(){return sum(customList().filter(c=>c.direction==="Someone owes me"&&c.party!=="Principal").map(c=>({amount:customOutstanding(c)})))+advanceOutstanding();}
 
 export function stillToGetBack(){return principalOwesYou()+othersOweYou()+holdTotal();}

@@ -20,13 +20,13 @@ export function addEntry({board,date,type,who,amount,note}){
  const fund=board==="fine"?FINE:REG,name=String(who||"").trim(),text=String(note||"").trim();
  const custom=(direction,label,party)=>["custom",{label,amount:amt,date,direction,fund,party:party||"Other",countsExpense:"No",note:text}];
  let kind,d;
- if(type==="collection")[kind,d]=["collection",{amount:amt,collectionDate:date,person:name,category:board==="fine"?"Fines":"Other college fees",description:text,paymentMethod:"Cash",personName:name}];
+ if(type==="collection")[kind,d]=["collection",{amount:amt,collectionDate:date,person:name,category:board==="fine"?"Fines":"Other income",description:text,paymentMethod:"Cash",personName:name}];
  else if(type==="expense")[kind,d]=["expense",{amount:amt,date,category:state.categories.includes("Other")?"Other":(state.categories[0]||"Other"),description:text,actualPayer:"You",fundUsed:fund,fundedBy:fund,paymentMethod:"Cash"}];
  else if(type==="handover")[kind,d]=["handover",{amount:amt,date,recipient:name||"Principal",fund,paymentMethod:"Cash",collectionDates:[],allocated:false,status:"Pending"}];
  else if(type==="hold")[kind,d]=["hold",{recipient:name||"Someone",amount:amt,date,fund,purpose:text||"Money given, waiting for voucher"}];
  else if(type==="took")[kind,d]=custom("Someone owes me",text||"Took money, will return",name);
- else if(type==="changeOwed")[kind,d]=custom("Someone owes me",text||"Gave extra change, he owes me",name);
- else if(type==="changeIowe")[kind,d]=custom("I owe someone",text||"Change not given yet, I owe",name);
+ else if(type==="changeOwed")[kind,d]=custom("Someone owes me",text||"Extra change given — amount owed to me",name);
+ else if(type==="changeIowe")[kind,d]=custom("I owe someone",text||"Change not yet given — amount I owe",name);
  else if(type==="personal")[kind,d]=custom(PERS,text||"I took for personal use, must put back",name||"Me");
  else return "Pick what you are adding.";
  const f=forms[kind],key=collectionKey(kind);

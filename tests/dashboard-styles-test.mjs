@@ -50,7 +50,7 @@ const order=["November","Add anything, on any day","Where is every taka","Main i
 t("mock has every part in the design order",order.every((x,i)=>x>=0&&(i===0||x>order[i-1])));
 state.dash={v:4,style:"smart",skin:"comfort",fineTogether:false,order:[],hidden:[]};
 const sm=dashboardPages.dashboard();
-t("smart has hero, owed list, add form, boards",["Still need to give the principal","People who owe me","Add anything, on any day","Day by day: Main and Fine boards","Spending by category","Last 6 months"].every(x=>sm.includes(x)));
+t("smart has hero, owed list, add form, boards",["Still to give the principal","People who owe me","Add anything, on any day","Day by day: Main and Fine boards","Spending by category","Last 6 months"].every(x=>sm.includes(x)));
 t("smart Fine separate shows two board cards",sm.includes("sm-boards"));
 state.dash.fineTogether=true;
 t("smart Fine together hides separate cards",!dashboardPages.dashboard().includes("sm-boards"));

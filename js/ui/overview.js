@@ -29,11 +29,11 @@ export function glance(){
    ${c("given","Given to people",g.given,"Taken from a fund, someone owes it back","out")}
   cash:["Cash with me (expected)","All funds left minus handovers, advances, and adjustments. Main "+m(g.cashMain)+" · Fine "+m(g.cashFine)+". Expected physical cash."] ,
    ${c("hand","Given to principal",g.hand,"Held by the principal")}
-   ${c("pers","My personal take",g.persOut,"Money I took for myself. Must be put back","out")}
+   ${c("pers","Personal withdrawals",g.persOut,"Money taken for personal use. Must be repaid","out")}
    ${c("hold","Held by others",g.hold+g.adv,`Waiting for voucher ${m(g.hold)} · Advances ${m(g.adv)}`)}
    ${c("owedme","Owed to me",stillToGetBack(),`Principal ${m(principalOwesYou())} · Others ${m(othersOweYou())}`,"amber")}
    ${c("iowe","I owe others",g.iOweOthers,"Teachers and others, incl. student change")}
-   ${c("owedprin","I must give principal",mustGivePrincipal(),"Main + Fine: collected minus real expenses minus given")}
+   ${c("owedprin","Due to principal",mustGivePrincipal(),"Main + Fine: collected minus real expenses minus given")}
    <div class="gl-card muted"><span class="card-label">Bank / bKash / Nagad</span><strong>Not tracked yet</strong><span class="card-sub">Account tracking is a later stage. No figure is shown rather than a made-up one.</span></div>
   </div>
   <div class="actions" style="margin-top:12px"><button class="btn primary" data-cash-count>Count cash now</button></div>
@@ -47,7 +47,7 @@ export function glanceDetail(k){
   given:["Given to people","Custom entries where someone owes you, taken from a fund. Not an expense."],
   hand:["Given to principal","Sum of all active handovers."],hold:["Held by others","Money given to someone pending voucher, plus advances not yet returned or spent."],
   owedme:["Owed to me","Principal owes me + others owe me + money waiting for a voucher."],iowe:["I owe others","Teacher-paid expenses not reimbursed + custom 'I owe someone' entries still outstanding."],
-  pers:["My personal take","Custom entries of type I took personal money, minus what you put back."],owedprin:["I must give principal","Main board + Fine board: collected − real expenses (including teacher-paid) − adjustments − money already given to the principal. Click a board card for the exact lines."]}[k];
+  pers:["Personal withdrawals","Custom entries of type “I took personal money”, minus amounts repaid."],owedprin:["Due to principal","Main board + Fine board: collected − real expenses (including teacher-paid) − adjustments − money already given to the principal. Click a board card for the exact lines."]}[k];
  if(!F)return;
  const rows=ledger().filter(r=>(GL_KINDS[k]||["handover","custom","expense","adjustment"]).includes(r.kind)&&!DEAD.includes(r.status)).sort((x,y)=>y.date.localeCompare(x.date)).map(r=>[r.date||"—",esc(r.type),esc(r.desc),m(r.amount),esc(r.status)]);
  document.body.insertAdjacentHTML("beforeend",`<div class="modal-backdrop"><div class="modal"><div class="modal-head"><h2>${esc(F[0])}</h2><button class="btn small" data-close>×</button></div><div class="modal-body"><p>${esc(F[1])}</p>${rows.length?table(["Date","Type","Description","Amount","Status"],rows):'<div class="empty">No records for this figure.</div>'}</div></div></div>`);

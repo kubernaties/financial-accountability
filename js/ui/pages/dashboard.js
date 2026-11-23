@@ -31,7 +31,7 @@ const classicPages={
  ${card("Money collected",money(coll),"All money received")}
  ${card("Money spent",money(spent),`${money(cashPaidExpenses())} paid by you`)}
  ${card("Money with me now",money(moneyInHand()),"What you should be holding")}
- ${card("I must give principal",money(mustGivePrincipal()),"Main + Fine boards")}
+ ${card("Due to principal",money(mustGivePrincipal()),"Main + Fine boards")}
  </div><br><div class="card" style="border-left:4px solid var(--amber)"><div class="card-label">Still to get back (total)</div><div class="card-value">${money(stillToGetBack())}</div><div class="card-sub">Principal owes me ${money(principalOwesYou())} · Others owe me ${money(othersOweYou())} · Given, waiting for voucher ${money(holdTotal())}</div></div>
  ${sec("Where is the money? (each fund is separate)")}${fundTable()}
  ${sec("Fines")}<div class="grid cards-4">

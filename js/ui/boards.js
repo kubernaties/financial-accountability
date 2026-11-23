@@ -30,8 +30,8 @@ function boardHtml(b,m){
  const late=closed&&rec.closedAt?bm.days.flatMap(d=>d.rows).filter(e=>e.ts&&e.ts>rec.closedAt).length:0;
  let status;
  if(closed)status=`<div class="bd-status bd-ok"><strong>Accountability finished</strong><span>${new Date(rec.closedAt).toLocaleDateString("en-GB")}. Leftover ${money(rec.still||0)} carries into the next month as opening balance.</span></div>`;
- else if(bm.still<=0.005&&(bm.givenAll>0||bm.should>0))status=`<div class="bd-status bd-wait"><strong>${bm.overGiven>0.005?`Given in full. You gave ${money(bm.overGiven)} extra.`:`All money is given to the principal`}</strong><span>${bm.overGiven>0.005?`Principal owes you ${money(bm.overGiven)}. This extra is not counted as money still to give.`:`Confirm accountability, then this month is done.`}</span></div>`;
- else status=`<div class="bd-status bd-open"><strong>Given ${money(bm.givenAll)}. Still need to give ${money(bm.still)}</strong><span>Accountability is open.</span></div>`;
+ else if(bm.still<=0.005&&(bm.givenAll>0||bm.should>0))status=`<div class="bd-status bd-wait"><strong>${bm.overGiven>0.005?`Fully handed over. You gave ${money(bm.overGiven)} extra.`:`All funds have been given to the principal`}</strong><span>${bm.overGiven>0.005?`Principal owes you ${money(bm.overGiven)}. This surplus is not counted as amount still due.`:`Confirm accountability to close this month.`}</span></div>`;
+ else status=`<div class="bd-status bd-open"><strong>Given ${money(bm.givenAll)}. Still to give ${money(bm.still)}</strong><span>Accountability is open.</span></div>`;
  const warn=[];
  if(bm.neg.length){const first=bm.days.find(d=>d.left<-0.005),culprit=first?.rows.filter(e=>e.cash<0).map(e=>e.desc).join(", ");warn.push(`Cash goes below zero on ${bm.neg.map(dayName).join(", ")}${culprit?`. First entry: ${culprit}`:""}. Record what happened or correct the entry.`);}
  if(late)warn.push(`${late} entr${late>1?"ies were":"y was"} added or changed after accountability was finished. Reopen to check again.`);
@@ -39,20 +39,20 @@ function boardHtml(b,m){
  const days=bm.days.map(d=>`<div class="bd-day"><span>${dayName(d.d)}</span><span>Day spent ${money(d.spent)}</span></div>${d.rows.map(row).join("")}<div class="bd-left"><span>Left after ${dayName(d.d)}</span><strong>${money(d.left)}</strong></div>`).join("")||`<div class="empty">No entries in ${esc(monthName(m))}.</div>`;
  return `<div class="card bd-board ${b.id==="main"?"bd-main":""}"><div class="bd-head"><h3>${b.id==="main"?"1. ":"2. "}${esc(b.title)}</h3><span class="bd-pill">${b.id==="main"?"Priority":"Fine money only"}</span></div>
  ${warn.map(w=>`<div class="banner warn">⚠ ${esc(w)}</div>`).join("")}
- <div class="bd-metrics">${metric("Money I had this month",money(bm.had),`data-calc="${b.id}:had"`)}${metric("Expenses this month",money(bm.spent),`data-calc="${b.id}:spent"`)}${metric("Given to principal (this month)",money(bm.given),`data-calc="${b.id}:given"`)}${metric("Cash left",money(bm.cash),`data-calc="${b.id}:cash"`)}${metric("Still need to give",money(bm.still),`data-calc="${b.id}:still"`,"bd-hl")}</div>
+ <div class="bd-metrics">${metric("Received this month",money(bm.had),`data-calc="${b.id}:had"`)}${metric("Expenses this month",money(bm.spent),`data-calc="${b.id}:spent"`)}${metric("Given to principal (this month)",money(bm.given),`data-calc="${b.id}:given"`)}${metric("Cash on hand",money(bm.cash),`data-calc="${b.id}:cash"`)}${metric("Still to give",money(bm.still),`data-calc="${b.id}:still"`,"bd-hl")}</div>
  ${opening}${days}${status}<div class="bd-summary"><strong>Summary: ${esc(b.title)}, ${esc(monthName(m))}</strong><div>Collected <b>${money(bm.had)}</b></div><div>Spent <b class="bd-neg">${money(bm.spent)}</b></div><div>Should give <b>${money(bm.should)}</b></div><div>Given to principal <b class="bd-blue-t">${money(bm.givenAll)}</b></div>${bm.overGiven>0.005?`<div class="bd-amber-t">You gave extra <b>${money(bm.overGiven)} · Principal owes you</b></div>`:""}<div>Cash in hand <b>${money(bm.cash)}</b></div><div>Still need to give <b>${money(bm.still)}</b></div>${bm.shortfall?`<div class="bd-unexplained">Unexplained shortfall <b>${money(bm.shortfall)}</b></div>`:""}</div>
  <div class="actions bd-actions"><button class="btn primary" data-modal="handover" data-preset-fund="${esc(b.fund)}">Give to principal</button>${closed?`<button class="btn" data-bd-reopen="${b.id}">Reopen</button>`:`<button class="btn" data-bd-close="${b.id}">Finish accountability</button>`}</div></div>`;
 }
 
 let OB=[];
 function oblRows(list,cls){
- return list.length?list.map(x=>{OB.push(x);return `<button class="bd-row" data-ob="${OB.length-1}"><span class="bd-desc"><strong>${esc(x.name)}</strong><span class="bd-who"> · ${esc(x.sub||x.kind)} · ${esc(x.fund.replace(" fund",""))}</span></span><span class="bd-amt ${cls}">${money(x.amount)}</span><span class="bd-go" aria-hidden="true">›</span></button>`;}).join(""):`<div class="empty">Nobody.</div>`;
+ return list.length?list.map(x=>{OB.push(x);return `<button class="bd-row" data-ob="${OB.length-1}"><span class="bd-desc"><strong>${esc(x.name)}</strong><span class="bd-who"> · ${esc(x.sub||x.kind)} · ${esc(x.fund.replace(" fund",""))}</span></span><span class="bd-amt ${cls}">${money(x.amount)}</span><span class="bd-go" aria-hidden="true">›</span></button>`;}).join(""):`<div class="empty">None.</div>`;
 }
 function obligationsHtml(){
  OB=[];const o=obligations();
  return `<div class="grid cards-3 bd-obl"><div class="card"><div class="toolbar"><strong>Owed to me</strong><span class="bd-pos">${money(o.totals.owedMe)}</span></div>${oblRows(o.owedMe,"bd-pos")}<div class="card-sub">Loans, change, money waiting for a voucher, advances.</div></div>
  <div class="card"><div class="toolbar"><strong>I owe others</strong><span class="bd-neg">${money(o.totals.iOwe)}</span></div>${oblRows(o.iOwe,"bd-neg")}<div class="card-sub">Teachers who paid for the college, change I owe students.</div></div>
- <div class="card"><div class="toolbar"><strong>My personal take</strong><span class="bd-neg">${money(o.totals.personal)}</span></div>${oblRows(o.personal,"bd-neg")}<div class="card-sub">Money I took for myself. It must be put back.</div></div></div>`;
+ <div class="card"><div class="toolbar"><strong>Personal withdrawals</strong><span class="bd-neg">${money(o.totals.personal)}</span></div>${oblRows(o.personal,"bd-neg")}<div class="card-sub">Money taken for personal use. Must be repaid.</div></div></div>`;
 }
 
 /** The whole boards section (used by both dashboard styles). */
@@ -67,7 +67,7 @@ export function boardsSection(){
   ${quick("Change I owe","custom",{direction:"I owe someone",fund:"Regular fund",party:"Student"})}
   ${quick("Change owed to me","custom",{direction:"Someone owes me",fund:"Regular fund",party:"Student"})}
   <button class="btn" data-modal="hold">Money on hold (no voucher)</button></div>
- <div class="bd-total"><div><span>Should give principal (Main + Fine)</span><strong>${money(sh)}</strong></div><div><span>Already given</span><strong>${money(gv)}</strong></div><div class="bd-hl"><span>Still need to give (Main + Fine)</span><strong>${money(st)}</strong></div></div>
+ <div class="bd-total"><div><span>Should give principal (Main + Fine)</span><strong>${money(sh)}</strong></div><div><span>Already given</span><strong>${money(gv)}</strong></div><div class="bd-hl"><span>Still to give (Main + Fine)</span><strong>${money(st)}</strong></div></div>
  ${BOARDS.map(b=>boardHtml(b,m)).join("")}${obligationsHtml()}</section>`;
 }
 

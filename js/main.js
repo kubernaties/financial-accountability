@@ -10,6 +10,7 @@ import {$} from "./core/utils.js";
 import {app, render} from "./ui/shell.js";
 import {applyAuto} from "./ui/theme-auto.js";
 import * as Sync from "./services/github-sync.js";
+import "./custom-income-fees.js";
 
 if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
 Sync.init({get:()=>state,saveLocal,rerender:()=>render(),toast,log,

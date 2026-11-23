@@ -128,11 +128,11 @@ function focusHtml(){
  const d=cfg(),m=month(),together=d.fineTogether,g=glanceData();
  const bm=BOARDS.map(b=>({b,o:boardMonth(b,m)})),T=k=>Math.round(bm.reduce((n,x)=>n+x.o[k],0)*100)/100;
  const sumO={still:T("still"),had:T("had"),spent:T("spent"),givenAll:T("givenAll"),cash:T("cash")};
- const rows=o=>`<div class="fx-rows"><div><span>Received this month</span><strong>${money(o.had)}</strong></div><div><span>Spent this month</span><strong class="out-text">${money(o.spent)}</strong></div><div><span>Given to principal so far</span><strong>${money(o.givenAll)}</strong></div><div><span>Cash left</span><strong>${money(o.cash)}</strong></div></div>`;
- const card=(title,chip,o,sub,fund)=>`<div class="fx-card"><div class="fx-title"><span>${title}</span><span class="fx-chip">${chip}</span></div><div class="fx-lab">Still need to give</div><div class="fx-big">${money(o.still)}</div><div class="fx-sub">${sub}</div>${rows(o)}<div class="actions" style="margin-top:14px"><button class="btn primary" data-modal="handover"${fund?` data-preset-fund="${esc(fund)}"`:""}>Give to principal</button></div></div>`;
+ const rows=o=>`<div class="fx-rows"><div><span>Received this month</span><strong>${money(o.had)}</strong></div><div><span>Spent this month</span><strong class="out-text">${money(o.spent)}</strong></div><div><span>Given to principal so far</span><strong>${money(o.givenAll)}</strong></div><div><span>Cash on hand</span><strong>${money(o.cash)}</strong></div></div>`;
+ const card=(title,chip,o,sub,fund)=>`<div class="fx-card"><div class="fx-title"><span>${title}</span><span class="fx-chip">${chip}</span></div><div class="fx-lab">Still to give</div><div class="fx-big">${money(o.still)}</div><div class="fx-sub">${sub}</div>${rows(o)}<div class="actions" style="margin-top:14px"><button class="btn primary" data-modal="handover"${fund?` data-preset-fund="${esc(fund)}"`:""}>Give to principal</button></div></div>`;
  const cards=together
-  ?card("Main + Fine together","Shown as one",sumO,`Main ${money(bm[0].o.still)} · Fine ${money(bm[1].o.still)}. Only the display is combined, the records stay apart.`,"")
-  :card("Main income","Priority",bm[0].o,"Your main money.",bm[0].b.fund)+card("Fine","Fine money only",bm[1].o,"Kept apart. Usually given to sir at the end of the month.",bm[1].b.fund);
+  ?card("Main + Fine together","Shown as one",sumO,`Main ${money(bm[0].o.still)} · Fine ${money(bm[1].o.still)}. Only the display is combined; the records stay separate.`,"")
+  :card("Main income","Priority",bm[0].o,"Primary operating funds.",bm[0].b.fund)+card("Fine","Fine money only",bm[1].o,"Kept separate. Usually handed to the principal at month end.",bm[1].b.fund);
  const ow=owedRows(),ob=obligations().totals;
  const people=ow.length?ow.map(x=>`<button class="fx-person" data-owed="${esc(x.key)}"><span class="fx-name"><strong>${esc(x.name)}</strong><span class="fx-sub">${esc(x.who)}${x.date?" · "+esc(x.date):""}</span></span><span class="fx-chip">from ${shortFund(x.fund)}</span><strong class="out-text">${money(x.amount)}</strong><span class="fx-go" aria-hidden="true">›</span></button>`).join(""):`<div class="empty">Nobody owes you money.</div>`;
  const quick=(label,p)=>`<button class="btn" data-modal="custom" ${Object.entries(p).map(([k,v])=>`data-preset-${k}="${esc(v)}"`).join(" ")}>${label}</button>`;
@@ -141,7 +141,7 @@ function focusHtml(){
   <div class="fx-seg" role="group" aria-label="Fine money"><button class="${together?"":"on"}" data-fine-mode="separate">Fine separate</button><button class="${together?"on":""}" data-fine-mode="together">Fine together</button></div></div>
  <div class="fx-boards">${cards}</div>
  <div class="fx-card"><div class="fx-title"><span>People who owe me</span><strong class="out-text fx-total">${money(owedTotal())}</strong></div><div class="fx-sub">Tap a name to see what was given, from which fund, and what came back.</div><div class="fx-list">${people}</div>
-  ${ob.iOwe||ob.personal?`<div class="fx-sub fx-foot">I owe others ${money(ob.iOwe)} · My personal take ${money(ob.personal)}</div>`:""}</div>
+  ${ob.iOwe||ob.personal?`<div class="fx-sub fx-foot">I owe others ${money(ob.iOwe)} · Personal withdrawals ${money(ob.personal)}</div>`:""}</div>
  <div class="fx-card"><div class="fx-title"><span>Add</span></div><div class="actions fx-quick"><button class="btn primary" data-modal="collection">+ Collection</button><button class="btn primary" data-modal="expense">+ Expense</button>${quick("Someone took money",{direction:"Someone owes me",fund:REG,party:"Other"})}<button class="btn" data-modal="hold">Money on hold (no voucher)</button></div></div>
  <div class="fx-cash"><span>Cash with me (expected) <strong>${money(g.cash)}</strong>${g.last?` · counted ${money(g.last.counted)} on ${esc(g.last.at.slice(0,10))}`:" · never counted"}</span><button class="btn small" data-cash-count>Count cash</button></div>
  <details class="fx-more"><summary>Day-by-day details (Main and Fine boards)</summary>${boardsSection()}</details>
@@ -162,15 +162,15 @@ function smartHtml(){
  const still=Math.round(bm.reduce((n,x)=>n+x.still,0)*100)/100;
  const ow=owedRows();
  const people=ow.length?ow.map(x=>`<button class="fx-person" data-owed="${esc(x.key)}"><span class="fx-name"><strong>${esc(x.name)}</strong><span class="fx-sub">${esc(x.who)}${x.date?" · "+esc(x.date):""}</span></span><span class="fx-chip">from ${shortFund(x.fund)}</span><strong class="out-text">${money(x.amount)}</strong><span class="fx-go" aria-hidden="true">›</span></button>`).join(""):`<div class="empty">Nobody owes you money.</div>`;
- const bcard=(t,chip,o,fund)=>`<div class="sm-board"><div class="fx-title"><span>${t}</span><span class="fx-chip">${chip}</span></div><div class="fx-lab">Still need to give</div><div class="sm-num">${money(o.still)}</div><div class="fx-sub">Received ${money(o.had)} · Spent ${money(o.spent)} · Given ${money(o.givenAll)}</div><div class="actions" style="margin-top:10px"><button class="btn small primary" data-modal="handover" data-preset-fund="${esc(fund)}">Give to principal</button></div></div>`;
+ const bcard=(t,chip,o,fund)=>`<div class="sm-board"><div class="fx-title"><span>${t}</span><span class="fx-chip">${chip}</span></div><div class="fx-lab">Still to give</div><div class="sm-num">${money(o.still)}</div><div class="fx-sub">Received ${money(o.had)} · Spent ${money(o.spent)} · Given ${money(o.givenAll)}</div><div class="actions" style="margin-top:10px"><button class="btn small primary" data-modal="handover" data-preset-fund="${esc(fund)}">Give to principal</button></div></div>`;
  const kpi=(l,v,sub,cls="")=>`<div class="sm-kpi"><span class="card-label">${l}</span><strong class="${cls}">${v}</strong><span class="card-sub">${esc(sub)}</span></div>`;
  return `<div class="sm">
  <div class="card sm-top"><div class="mk-title"><button class="btn small" data-bd-month="-1" aria-label="Previous month">‹</button><strong>${esc(monthName(m))}</strong><button class="btn small" data-bd-month="1" aria-label="Next month">›</button><span class="badge ${open?"amber":"green"}">Round ${open?"open":"finished"}</span></div>
   <div class="actions">${fineSeg(together)}<button class="btn" data-jump="add">+ Add entry</button><button class="btn" data-print>Print / PDF</button><button class="btn" data-cash-count>Count cash</button></div></div>
  ${g.warn.length?`<div class="banner warn">${g.warn.map(w=>`<div>⚠ ${esc(w)}</div>`).join("")}</div>`:""}
- <div class="sm-hero"><div class="sm-main"><div class="fx-lab">Still need to give the principal</div><div class="sm-big">${money(still)}</div>
+ <div class="sm-hero"><div class="sm-main"><div class="fx-lab">Still to give the principal</div><div class="sm-big">${money(still)}</div>
    <div class="sm-split">${together?`<span>Main ${money(bm[0].still)} + Fine ${money(bm[1].still)} shown together</span>`:`<span>Main <strong>${money(bm[0].still)}</strong></span><span>Fine <strong>${money(bm[1].still)}</strong></span>`}</div></div>
-  <div class="sm-kpis">${kpi("Total received",money(g.recv),"All boards")}${kpi("Spent",money(g.spentX),"Expenses only","out-text")}${kpi("Cash with me",money(g.cash),g.last?"Counted "+money(g.last.counted):"Never counted")}${kpi("Owed to me",money(owedTotal()),"People who owe me","out-text")}${kpi("I owe others",money(ob.iOwe),"Teachers, change")}${kpi("My personal take",money(ob.personal),"Must put back")}</div></div>
+  <div class="sm-kpis">${kpi("Total received",money(g.recv),"All boards")}${kpi("Spent",money(g.spentX),"Expenses only","out-text")}${kpi("Cash with me",money(g.cash),g.last?"Counted "+money(g.last.counted):"Never counted")}${kpi("Owed to me",money(owedTotal()),"People who owe me","out-text")}${kpi("I owe others",money(ob.iOwe),"Teachers, change")}${kpi("Personal withdrawals",money(ob.personal),"Must be repaid")}</div></div>
  ${together?"":`<div class="sm-boards">${bcard("Main income","Priority",bm[0],BOARDS[0].fund)}${bcard("Fine","Fine money only",bm[1],BOARDS[1].fund)}</div>`}
  ${sourceLedger()}
  <div class="sm-cols"><div class="sm-left">
@@ -195,7 +195,7 @@ function mockGlance(){
  const tot=Math.max(1,parts.reduce((n,p)=>n+Math.max(0,p[1]),0));
  const c=(l,v,sub,cls="")=>`<div class="gl-card ${cls}"><span class="card-label">${l}</span><strong>${m(v)}</strong><span class="card-sub">${esc(sub)}</span></div>`;
  const toggle=`<div class="mk-board-switch" role="tablist" aria-label="Choose board"><button class="btn ${board==="main"?"primary":""}" data-board-overview="main" role="tab" aria-selected="${board==="main"}">Main</button><button class="btn ${board==="fine"?"primary":""}" data-board-overview="fine" role="tab" aria-selected="${board==="fine"}">Fine</button></div>`;
- const remaining=over>0?c("Principal owes me (over-given)",over,"Principal must return this amount","amber"):c("Still need to give principal",still,`Should give ${m(should)} · Already given ${m(given)}`);
+ const remaining=over>0?c("Principal owes me (over-given)",over,"Principal must return this amount","amber"):c("Still to give principal",still,`Should give ${m(should)} · Already given ${m(given)}`);
  return `${toggle}<div class="card mkg"><h3>Where is every taka? · ${title}</h3>
   <div class="gl-bar" role="img" aria-label="${title} money distribution">${parts.map(p=>`<span class="seg mkg-${p[2]}" style="width:${(Math.max(0,p[1])/tot*100).toFixed(2)}%" title="${esc(p[0])} ${m(p[1])}"></span>`).join("")}</div>
   <div class="gl-legend">${parts.map(p=>`<span><i class="dot mkg-${p[2]}"></i>${esc(p[0])}: <strong>${m(p[1])}</strong></span>`).join("")}</div>
@@ -207,7 +207,7 @@ function mockHtml(){
  const d=cfg(),m=month(),together=d.fineTogether,g=glanceData();
  const bms=BOARDS.map(b=>boardMonth(b,m)),open=BOARDS.some(b=>closeRec(m,b)?.status!=="Closed");
  const sumStill=Math.round(bms.reduce((n,x)=>n+x.still,0)*100)/100;
- const combined=together?`<div class="card mk-comb"><strong>Main + Fine together</strong><div class="fx-big">${money(sumStill)}</div><div class="card-sub">Still need to give. Main ${money(bms[0].still)} · Fine ${money(bms[1].still)}. Display only, the records stay apart.</div></div>`:"";
+ const combined=together?`<div class="card mk-comb"><strong>Main + Fine together</strong><div class="fx-big">${money(sumStill)}</div><div class="card-sub">Still to give. Main ${money(bms[0].still)} · Fine ${money(bms[1].still)}. Display only — the records stay separate.</div></div>`:"";
  return `<div class="mk">
  <div class="card mk-head"><div><div class="mk-title"><strong>${esc(monthName(m))}</strong></div><div class="card-sub">Round ${open?"open":"finished"}. All amounts in ৳. Click any card, row or person for full details.</div></div>
   <div class="actions"><button class="btn" data-print>Print / PDF report</button><button class="btn" data-cash-count>Count cash now</button></div></div>

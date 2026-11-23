@@ -1,7 +1,0 @@
-node_modules/
-.DS_Store
-Thumbs.db
-*.log
-# Never commit secrets: the GitHub token must only ever be typed into the app.
-.env
-connection.json.bak

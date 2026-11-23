@@ -19,7 +19,7 @@ export function calcExplain(){
   r("Money collected",`Regular ${m(regularCollections())} + Fines ${m(fineCollected())}`,coll),
   r("Money spent",`Confirmed expenses only. Money given and waiting for a voucher (${m(holdTotal())}) is not included`,expenseTotal()),
   r("Money with me now",`All funds left ${m(lefts)} − Given to principal ${m(hand)} − Advances out ${m(adv)}${fra?` − Fine restored by adjustment ${m(fra)}`:""}`,moneyInHand()),
-  r("I must give principal",`Main board and Fine board: collected − real expenses (yours and teacher-paid)${adj?` − Adjustments ${m(adj)}`:""} − Given to principal ${m(hand)}`,owe),
+  r("Due to principal",`Main board and Fine board: collected − real expenses (yours and teacher-paid)${adj?` − Adjustments ${m(adj)}`:""} − Given to principal ${m(hand)}`,owe),
   r("Still to get back (total)",`Principal owes me ${m(principalOwesYou())} + Others owe me ${m(othersOweYou())} + Waiting for voucher ${m(holdTotal())}`,stillToGetBack()),
   r("Not given yet",`Collected ${m(coll)} − Given to principal ${m(hand)}`,Math.max(0,coll-hand)),
   r("Fine money left",`Fines ${m(fineCollected())} + Restored ${m(fineRestored())} − Fine fund spending, holds and moves`,fundFlow(FINE).left),

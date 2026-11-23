@@ -10,6 +10,7 @@ export function defaultState(){
   version:2,currency:"BDT",theme:"dark",users:[{id:"USR-OWNER",name:"Owner",role:"Owner",github:""}],currentUser:"USR-OWNER",
   transactions:[],collections:[],expenses:[],vouchers:[],fines:[],advances:[],handovers:[],custom:[],
   reimbursements:[],holds:[],transfers:[],cashCounts:[],adjustments:[],periods:[],monthly:[],audit:[],reconfirmedDates:[],boardClose:[],
+  incomeFees:["Monthly fees","Annual fees","Examination fees","IC Card Fee","Registration fee","Admission fee","Development fee","Fines","Other income"],
   categories:["Electricity","Electricity Meter 1","Electricity Meter 2","Wi-Fi & Internet","Water","Gas","Hospitality","Photocopy","Printing","Stationery","Transportation","Maintenance","Cleaning","Communication","Miscellaneous"],
   dash:{v:4,style:"mock",skin:"comfort",fineTogether:false,order:[],hidden:[]},
   settings:{repo:"",branch:"main",demo:false,lastSync:null,remoteSha:null,backupFile:"backups/financial-data.json"}
@@ -24,7 +25,8 @@ export function load(){
    users:raw.users?.length?raw.users:d.users,
    transactions:raw.transactions||[],collections:raw.collections||[],expenses:raw.expenses||[],vouchers:raw.vouchers||[],
    fines:raw.fines||[],advances:raw.advances||[],handovers:raw.handovers||[],reimbursements:raw.reimbursements||[],
-   custom:raw.custom||[],adjustments:raw.adjustments||[],periods:raw.periods||[],monthly:raw.monthly||[],audit:raw.audit||[],reconfirmedDates:raw.reconfirmedDates||[],holds:raw.holds||[],transfers:raw.transfers||[],cashCounts:raw.cashCounts||[],boardClose:raw.boardClose||[]};
+   custom:raw.custom||[],adjustments:raw.adjustments||[],periods:raw.periods||[],monthly:raw.monthly||[],audit:raw.audit||[],reconfirmedDates:raw.reconfirmedDates||[],holds:raw.holds||[],transfers:raw.transfers||[],cashCounts:raw.cashCounts||[],boardClose:raw.boardClose||[],
+   incomeFees:Array.isArray(raw.incomeFees)&&raw.incomeFees.length?raw.incomeFees:d.incomeFees};
  }catch(e){try{const bad=localStorage.getItem("fa-state");if(bad)localStorage.setItem("fa-state-corrupt-"+Date.now(),bad);}catch{}return defaultState();}
 }
 function sanitize(s){

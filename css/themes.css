@@ -1,0 +1,23 @@
+/* Light theme overrides (dark is the default, defined in base.css). */
+
+:root[data-theme="light"] .sidebar {
+  background: #ffffff;
+}
+:root[data-theme="light"] .topbar {
+  background: rgba(255,255,255,.94);
+}
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea,
+:root[data-theme="light"] th,
+:root[data-theme="light"] .cal-head {
+  background: #f8fafc;
+}
+:root[data-theme="light"] .banner {
+  background: #dcfce7;
+  color: #14532d;
+}
+:root[data-theme="light"] .banner.warn {
+  background: #fef3c7;
+  color: #78350f;
+}

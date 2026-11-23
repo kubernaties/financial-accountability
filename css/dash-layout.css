@@ -1,0 +1,284 @@
+/* New dashboard: settings bar, movable blocks, edit mode, red for money taken out, and colour styles. */
+
+.dash-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.dash-bar label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.dash-bar select {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  min-height: 40px;
+}
+.dz {
+  margin-bottom: 22px;
+}
+.dz.is-hidden {
+  opacity: .45;
+}
+.dash.editing .dz {
+  outline: 2px dashed var(--line);
+  outline-offset: 6px;
+  border-radius: 12px;
+}
+.dash.editing .dz:hover {
+  outline-color: var(--blue);
+}
+.dash.editing .dz.dragging {
+  opacity: .35;
+}
+.dz-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.dz-grip {
+  cursor: grab;
+  font-weight: 600;
+  user-select: none;
+}
+.dz-bar .btn.small {
+  min-width: 44px;
+  min-height: 40px;
+}
+
+/* Money taken out of a fund (spent or given to someone) always uses the same red. */
+.out-text {
+  color: var(--red);
+}
+.out-card {
+  border-left: 4px solid var(--red);
+}
+.owed .toolbar span {
+  font-size: 22px;
+  font-weight: 700;
+}
+.gl-card.out {
+  border-left: 4px solid var(--red);
+}
+.gl-card.out strong {
+  color: var(--red);
+}
+.s-given {
+  background: #fb7185;
+}
+
+/* Colour styles (chosen in the dashboard bar) */
+.dash[data-skin]:not([data-skin="default"]) {
+  background: var(--bg);
+  color: var(--text);
+  padding: 20px;
+  border-radius: 16px;
+}
+.dash[data-skin="paper"] {
+  color-scheme: light;
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --panel-2: #eef1f5;
+  --line: #e2e6ec;
+  --text: #1b2430;
+  --muted: #5b6676;
+  --red: #c62828;
+  --primary: #0f7b66;
+  --amber: #a15c00;
+  --blue: #1d5fa8;
+}
+.dash[data-skin="ledger"] {
+  --bg: #14171c;
+  --panel: #1b1f26;
+  --panel-2: #232831;
+  --line: #3a3f48;
+  --text: #e6e2d6;
+  --muted: #a29e8e;
+  --red: #ff8a80;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.dash[data-skin="soft"] {
+  color-scheme: light;
+  --bg: #eef0fb;
+  --panel: #ffffff;
+  --panel-2: #e3e6f8;
+  --line: #d4d8f0;
+  --text: #26254a;
+  --muted: #55547a;
+  --red: #b3261e;
+  --primary: #0f7b66;
+  --amber: #8a4f00;
+  --blue: #3b4ccf;
+}
+.dash[data-skin="soft"] .card,
+.dash[data-skin="soft"] .gl-card {
+  border-radius: 22px;
+  box-shadow: 0 6px 20px rgba(60,60,130,.08);
+}
+.dash[data-skin="bold"] {
+  --bg: #0b0b0b;
+  --panel: #161616;
+  --panel-2: #202020;
+  --line: #333333;
+  --text: #ffffff;
+  --muted: #cfcfcf;
+  --primary: #ffd400;
+  --amber: #ffd400;
+  --blue: #7cc4ff;
+  --red: #ff5a4f;
+}
+.dash[data-skin="bold"] .card-value,
+.dash[data-skin="bold"] .gl-card strong {
+  font-weight: 800;
+}
+.dash[data-skin="calm"] {
+  color-scheme: light;
+  --bg: #f3f1ea;
+  --panel: #fbfaf6;
+  --panel-2: #eeeade;
+  --line: #dad5c5;
+  --text: #1f3b2e;
+  --muted: #566b5f;
+  --red: #b3261e;
+  --primary: #1e8a6e;
+  --blue: #2f6fb0;
+  --amber: #8a5a00;
+  font-family: Georgia, "Times New Roman", serif;
+}
+@media (max-width: 760px) {
+  .dash[data-skin]:not([data-skin="default"]) {
+    padding: 12px;
+  }
+}
+
+/* Dashboard styles (layouts) */
+.style-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.style-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.style-card .btn {
+  margin-top: auto;
+  min-height: 40px;
+}
+.style-card.current {
+  border: 2px solid var(--primary);
+}
+.dash-tabs,
+.dash-jump {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-bottom: 14px;
+  padding-bottom: 4px;
+}
+.dash-tabs .btn {
+  min-height: 44px;
+  white-space: nowrap;
+}
+.dash-jump {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: 8px 0;
+  background: var(--bg);
+}
+.dash-jump .btn {
+  white-space: nowrap;
+  min-height: 40px;
+}
+details.acc > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 12px 14px;
+  min-height: 44px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.dash-two {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 20px;
+}
+.dash-cols {
+  column-count: 2;
+  column-gap: 18px;
+}
+.dash-cols .dz {
+  break-inside: avoid;
+}
+.dash-hero {
+  padding: 22px;
+  margin-bottom: 22px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.dash-hero .big {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.story p {
+  margin: 6px 0;
+  font-size: 17px;
+}
+.dash[data-layout="compact"] {
+  font-size: 13px;
+}
+.dash[data-layout="compact"] .dz {
+  margin-bottom: 12px;
+}
+.dash[data-layout="compact"] .card,
+.dash[data-layout="compact"] .gl-card {
+  padding: 10px 12px;
+}
+.dash[data-layout="compact"] .card-value {
+  font-size: 20px;
+}
+.dash[data-layout="large"] {
+  font-size: 17px;
+}
+.dash[data-layout="large"] .grid {
+  grid-template-columns: 1fr !important;
+}
+.dash[data-layout="large"] .card-value {
+  font-size: 32px;
+}
+.dash[data-layout="large"] .btn {
+  min-height: 52px;
+  font-size: 17px;
+}
+@media (max-width: 900px) {
+  .dash-two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dash-cols {
+    column-count: 1;
+  }
+  .dash-hero .big {
+    font-size: 32px;
+  }
+}

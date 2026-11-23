@@ -1,0 +1,32 @@
+/* Print / Save-as-PDF layout. */
+
+@media print {
+  .sidebar,
+  .topbar,
+  .toolbar .actions,
+  .btn {
+    display: none !important;
+  }
+  .main {
+    grid-column: 1;
+  }
+  .app-shell {
+    display: block;
+  }
+  .content {
+    max-width: none;
+    padding: 0;
+  }
+  .card {
+    break-inside: avoid;
+  }
+  .table-wrap {
+    overflow: visible;
+  }
+  table {
+    min-width: 0;
+  }
+  .calendar {
+    break-inside: avoid;
+  }
+}

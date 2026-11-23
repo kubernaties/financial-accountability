@@ -1,0 +1,103 @@
+/* One-Glance overview section and drill-down cards. */
+
+.glance {
+  margin-bottom: 22px;
+}
+.gl-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 14px 0 8px;
+}
+.gl-bar {
+  display: flex;
+  height: 22px;
+  border-radius: 11px;
+  overflow: hidden;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+.seg,
+.dot {
+  background: var(--blue);
+}
+.s-pers {
+  background: #f472b6;
+}
+.s-cash {
+  background: #22c55e;
+}
+.s-spent {
+  background: #fb7185;
+}
+.s-hand {
+  background: #a78bfa;
+}
+.s-hold {
+  background: #fbbf24;
+}
+.s-adv {
+  background: #38bdf8;
+}
+.s-adj {
+  background: #94a3b8;
+}
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.gl-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.gl-recon {
+  margin: 10px 0 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.gl-recon .bad {
+  color: var(--red);
+}
+.gl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  gap: 12px;
+}
+.gl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  transition: transform .15s,border-color .15s;
+}
+button.gl-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--blue);
+}
+.gl-card strong {
+  font-size: 22px;
+}
+.gl-card.hl {
+  border-left: 4px solid var(--primary);
+}
+.gl-card.amber {
+  border-left: 4px solid var(--amber);
+}
+.gl-card.muted {
+  opacity: .75;
+  border-style: dashed;
+}
+.gl-warn div {
+  margin: 2px 0;
+}

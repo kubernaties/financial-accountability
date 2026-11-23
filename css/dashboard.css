@@ -1,0 +1,125 @@
+/* Dashboard: section titles, bar charts, column chart, summary box, quick actions. */
+
+/* Dashboard extras */
+.section-title {
+  margin: 26px 0 12px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--muted);
+}
+.section-title:first-child {
+  margin-top: 0;
+}
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(70px,120px) 1fr auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+}
+.bar-label {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-track {
+  height: 10px;
+  background: var(--panel-2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 99px;
+}
+.bar-fill.green {
+  background: var(--primary);
+}
+.bar-fill.red {
+  background: var(--red);
+}
+.bar-fill.amber {
+  background: var(--amber);
+}
+.bar-val {
+  font-variant-numeric: tabular-nums;
+}
+.vchart {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  height: 170px;
+  margin-top: 14px;
+}
+.vcol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+.vbars {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+}
+.vbar {
+  width: 30%;
+  max-width: 26px;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+}
+.vbar.in,
+.dot.in {
+  background: var(--primary);
+}
+.vbar.exp,
+.dot.exp {
+  background: var(--red);
+}
+.vlabel {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.legend {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin: 0 4px 0 10px;
+}
+.seg {
+  display: flex;
+  gap: 6px;
+}
+.summary-box {
+  font-size: 17px;
+  line-height: 1.7;
+  padding: 20px 22px;
+  border-left: 4px solid var(--primary);
+}
+.cards-2 {
+  grid-template-columns: repeat(2,minmax(0,1fr));
+}
+.quick .btn {
+  padding: 11px 16px;
+}

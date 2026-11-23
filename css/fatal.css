@@ -1,0 +1,39 @@
+/* Start-up error panel shown by js/bootstrap.js when the app cannot start. */
+
+#fa-fatal {
+  font-family: system-ui,sans-serif;
+  max-width: 640px;
+  margin: 8vh auto;
+  padding: 24px;
+  background: #172033;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+#fa-fatal h2 {
+  margin: 0 0 8px;
+}
+#fa-fatal pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #0b1220;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  max-height: 180px;
+  overflow: auto;
+}
+#fa-fatal button {
+  margin: 6px 8px 0 0;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: #1e293b;
+  color: #e5e7eb;
+  cursor: pointer;
+  font-size: 14px;
+}
+#fa-fatal button.p {
+  background: #2563eb;
+  border-color: #2563eb;
+}

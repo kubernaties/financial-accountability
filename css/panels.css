@@ -1,0 +1,83 @@
+/* Principal panel, banners, receipt, progress bar and checklist. */
+
+.principal-panel {
+  border-left: 4px solid var(--primary);
+  padding: 22px;
+}
+.pp-title {
+  font-size: 18px;
+  font-weight: 750;
+  margin-bottom: 12px;
+}
+.banner {
+  border-radius: 10px;
+  padding: 13px 15px;
+  font-size: 15px;
+  margin-bottom: 16px;
+  background: #14532d;
+  color: #bbf7d0;
+}
+.banner.warn {
+  background: #451a03;
+  color: #fde68a;
+}
+.receipt {
+  max-width: 520px;
+}
+.rc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  font-size: 15px;
+  border-bottom: 1px dashed var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.rc-row.line {
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 6px;
+}
+.rc-row.big {
+  font-size: 20px;
+  border-bottom: 0;
+  padding-top: 12px;
+  color: var(--primary);
+}
+.progress {
+  height: 14px;
+  background: var(--panel-2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 14px;
+  max-width: 520px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 99px;
+}
+.chk {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 7px 0;
+  font-size: 14px;
+}
+.chk span:first-child {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex: none;
+}
+.chk.ok span:first-child {
+  background: #14532d;
+  color: #bbf7d0;
+}
+.chk.wait span:first-child {
+  background: #451a03;
+  color: #fde68a;
+}

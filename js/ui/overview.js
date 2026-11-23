@@ -25,16 +25,16 @@ export function glance(){
   <div class="gl-recon">Received <strong>${m(g.recv)}</strong> = placed <strong>${m(g.placed)}</strong> · unexplained <strong class="${Math.abs(g.diff)>0.005?"bad":""}">${m(g.diff)}</strong></div>
   <div class="gl-grid">
    ${c("received","Total received",g.recv,"All money in, all funds")}
-   ${c("spent","Spent from funds",g.spentX,"Expenses only. Money given to people is not counted here","out")}
-   ${c("given","Given to people",g.given,"Taken from a fund, someone owes it back","out")}
-  cash:["Cash with me (expected)","All funds left minus handovers, advances, and adjustments. Main "+m(g.cashMain)+" · Fine "+m(g.cashFine)+". Expected physical cash."] ,
+   ${c("spent","Spent from funds",g.spentX,"Expenses only — money given to people is not counted here","out")}
+   ${c("given","Given to people",g.given,"Taken from a fund; the recipient still owes it back","out")}
+   ${c("cash","Cash with me (expected)",g.cash,`Main ${m(g.cashMain)} · Fine ${m(g.cashFine)}`)}
    ${c("hand","Given to principal",g.hand,"Held by the principal")}
-   ${c("pers","Personal withdrawals",g.persOut,"Money taken for personal use. Must be repaid","out")}
+   ${c("pers","Personal withdrawals",g.persOut,"Money taken for personal use — must be repaid","out")}
    ${c("hold","Held by others",g.hold+g.adv,`Waiting for voucher ${m(g.hold)} · Advances ${m(g.adv)}`)}
    ${c("owedme","Owed to me",stillToGetBack(),`Principal ${m(principalOwesYou())} · Others ${m(othersOweYou())}`,"amber")}
-   ${c("iowe","I owe others",g.iOweOthers,"Teachers and others, incl. student change")}
-   ${c("owedprin","Due to principal",mustGivePrincipal(),"Main + Fine: collected minus real expenses minus given")}
-   <div class="gl-card muted"><span class="card-label">Bank / bKash / Nagad</span><strong>Not tracked yet</strong><span class="card-sub">Account tracking is a later stage. No figure is shown rather than a made-up one.</span></div>
+   ${c("iowe","I owe others",g.iOweOthers,"Teachers and others, including student change")}
+   ${c("owedprin","Due to principal",mustGivePrincipal(),"Main + Fine: collected − real expenses − given")}
+   <div class="gl-card muted"><span class="card-label">Bank / bKash / Nagad</span><strong>Not tracked yet</strong><span class="card-sub">Account tracking is planned. No figure is shown rather than a made-up one.</span></div>
   </div>
   <div class="actions" style="margin-top:12px"><button class="btn primary" data-cash-count>Count cash now</button></div>
  </section>`;

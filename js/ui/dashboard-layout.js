@@ -16,6 +16,7 @@ import {ENTRY_TYPES, addEntry} from "./inline-add.js";
 import {closeRec} from "../finance/boards.js";
 import {today} from "../core/utils.js";
 import {BOARDS, boardMonth, boardTotals, mustGivePrincipal, obligations} from "../finance/boards.js";
+import {openCustomReturn, openHoldReturn, openHoldSettle, openModal, openRepayment} from "./forms/index.js";
 
 /** Dashboard styles (layouts). "new" = movable blocks (kept id for saved settings), "classic" = the original page. */
 export const STYLES=[
@@ -73,8 +74,23 @@ function owedBlock(){
 export function owedDetail(key){
  const x=owedRows().find(r=>r.key===key);if(!x)return;
  const row=(a,b)=>`<div class="rc-row"><span>${a}</span><span>${b}</span></div>`;
- document.body.insertAdjacentHTML("beforeend",`<div class="modal-backdrop"><div class="modal"><div class="modal-head"><h2>${esc(x.name)}</h2><button class="btn small" data-close>×</button></div><div class="modal-body"><div class="banner warn">Still owed to you: <strong>${money(x.amount)}</strong> · taken from <strong>${esc(x.fund)}</strong></div><div class="receipt">${row("Type",esc(x.who))}${row("Date given",esc(x.date||"—"))}${row("Amount given",money(x.given))}${row("Returned so far",money(x.returned))}${row("Status",esc(x.status))}${x.note?row("Note",esc(x.note)):""}</div><p class="card-sub">This money is not counted as an expense until a voucher turns it into one.</p></div></div></div>`);
+ const id=key.includes(":")?key.split(":")[1]:"";
+ const kind=key.startsWith("c:")?"custom":key.startsWith("h:")?"hold":key.startsWith("a:")?"advance":"";
+ const acts=[];
+ if(kind==="custom")acts.push(`<button class="btn primary" data-od-act="custom-return" data-od-id="${esc(id)}">Record return</button>`);
+ if(kind==="hold"){acts.push(`<button class="btn primary" data-od-act="hold-settle" data-od-id="${esc(id)}">Voucher received</button>`);acts.push(`<button class="btn" data-od-act="hold-return" data-od-id="${esc(id)}">Money returned</button>`);}
+ if(kind==="advance")acts.push(`<button class="btn primary" data-od-act="repayment" data-od-id="${esc(id)}">Record repayment</button>`);
+ if(kind&&kind!=="")acts.push(`<button class="btn" data-od-act="edit" data-od-kind="${kind}" data-od-id="${esc(id)}">Edit entry</button>`);
+ document.body.insertAdjacentHTML("beforeend",`<div class="modal-backdrop"><div class="modal"><div class="modal-head"><h2>${esc(x.name)}</h2><button class="btn small" data-close>×</button></div><div class="modal-body"><div class="banner warn">Still owed to you: <strong>${money(x.amount)}</strong> · taken from <strong>${esc(x.fund)}</strong></div><div class="receipt">${row("Type",esc(x.who))}${row("Date given",esc(x.date||"—"))}${row("Amount given",money(x.given))}${row("Returned so far",money(x.returned))}${row("Outstanding",money(x.amount))}${row("Status",esc(x.status))}${x.note?row("Note",esc(x.note)):""}</div><p class="card-sub">This amount is not treated as an expense until a voucher or settlement is recorded.</p></div><div class="modal-foot">${acts.join("")}<button class="btn" data-close>Close</button></div></div></div>`);
  $$("[data-close]").forEach(b=>b.onclick=()=>$(".modal-backdrop")?.remove());
+ $$("[data-od-act]").forEach(b=>b.onclick=()=>{
+  const act=b.dataset.odAct,oid=b.dataset.odId;$(".modal-backdrop")?.remove();
+  if(act==="custom-return")openCustomReturn(oid);
+  else if(act==="hold-settle")openHoldSettle(oid);
+  else if(act==="hold-return")openHoldReturn(oid);
+  else if(act==="repayment")openRepayment(oid);
+  else if(act==="edit")openModal(b.dataset.odKind,oid);
+ });
 }
 const outCard=(l,v,s)=>`<div class="card out-card"><div class="card-label">${l}</div><div class="card-value out-text">▼ ${money(v)}</div><div class="card-sub">${esc(s)}</div></div>`;
 
@@ -163,14 +179,14 @@ function smartHtml(){
  const ow=owedRows();
  const people=ow.length?ow.map(x=>`<button class="fx-person" data-owed="${esc(x.key)}"><span class="fx-name"><strong>${esc(x.name)}</strong><span class="fx-sub">${esc(x.who)}${x.date?" · "+esc(x.date):""}</span></span><span class="fx-chip">from ${shortFund(x.fund)}</span><strong class="out-text">${money(x.amount)}</strong><span class="fx-go" aria-hidden="true">›</span></button>`).join(""):`<div class="empty">Nobody owes you money.</div>`;
  const bcard=(t,chip,o,fund)=>`<div class="sm-board"><div class="fx-title"><span>${t}</span><span class="fx-chip">${chip}</span></div><div class="fx-lab">Still to give</div><div class="sm-num">${money(o.still)}</div><div class="fx-sub">Received ${money(o.had)} · Spent ${money(o.spent)} · Given ${money(o.givenAll)}</div><div class="actions" style="margin-top:10px"><button class="btn small primary" data-modal="handover" data-preset-fund="${esc(fund)}">Give to principal</button></div></div>`;
- const kpi=(l,v,sub,cls="")=>`<div class="sm-kpi"><span class="card-label">${l}</span><strong class="${cls}">${v}</strong><span class="card-sub">${esc(sub)}</span></div>`;
+ const kpi=(l,v,sub,cls="",key="")=>`<button type="button" class="sm-kpi"${key?` data-glance="${key}"`:""}><span class="card-label">${l}</span><strong class="${cls}">${v}</strong><span class="card-sub">${esc(sub)}</span></button>`;
  return `<div class="sm">
  <div class="card sm-top"><div class="mk-title"><button class="btn small" data-bd-month="-1" aria-label="Previous month">‹</button><strong>${esc(monthName(m))}</strong><button class="btn small" data-bd-month="1" aria-label="Next month">›</button><span class="badge ${open?"amber":"green"}">Round ${open?"open":"finished"}</span></div>
   <div class="actions">${fineSeg(together)}<button class="btn" data-jump="add">+ Add entry</button><button class="btn" data-print>Print / PDF</button><button class="btn" data-cash-count>Count cash</button></div></div>
  ${g.warn.length?`<div class="banner warn">${g.warn.map(w=>`<div>⚠ ${esc(w)}</div>`).join("")}</div>`:""}
  <div class="sm-hero"><div class="sm-main"><div class="fx-lab">Still to give the principal</div><div class="sm-big">${money(still)}</div>
    <div class="sm-split">${together?`<span>Main ${money(bm[0].still)} + Fine ${money(bm[1].still)} shown together</span>`:`<span>Main <strong>${money(bm[0].still)}</strong></span><span>Fine <strong>${money(bm[1].still)}</strong></span>`}</div></div>
-  <div class="sm-kpis">${kpi("Total received",money(g.recv),"All boards")}${kpi("Spent",money(g.spentX),"Expenses only","out-text")}${kpi("Cash with me",money(g.cash),g.last?"Counted "+money(g.last.counted):"Never counted")}${kpi("Owed to me",money(owedTotal()),"People who owe me","out-text")}${kpi("I owe others",money(ob.iOwe),"Teachers, change")}${kpi("Personal withdrawals",money(ob.personal),"Must be repaid")}</div></div>
+  <div class="sm-kpis">${kpi("Total received",money(g.recv),"All boards","","received")}${kpi("Spent",money(g.spentX),"Expenses only","out-text","spent")}${kpi("Cash with me",money(g.cash),g.last?"Counted "+money(g.last.counted):"Never counted","","cash")}${kpi("Owed to me",money(owedTotal()),"People who owe me","out-text","owedme")}${kpi("I owe others",money(ob.iOwe),"Teachers, change","","iowe")}${kpi("Personal withdrawals",money(ob.personal),"Must be repaid","","pers")}</div></div>
  ${together?"":`<div class="sm-boards">${bcard("Main income","Priority",bm[0],BOARDS[0].fund)}${bcard("Fine","Fine money only",bm[1],BOARDS[1].fund)}</div>`}
  ${sourceLedger()}
  <div class="sm-cols"><div class="sm-left">
@@ -210,7 +226,7 @@ function mockHtml(){
  const combined=together?`<div class="card mk-comb"><strong>Main + Fine together</strong><div class="fx-big">${money(sumStill)}</div><div class="card-sub">Still to give. Main ${money(bms[0].still)} · Fine ${money(bms[1].still)}. Display only — the records stay separate.</div></div>`:"";
  return `<div class="mk">
  <div class="card mk-head"><div><div class="mk-title"><strong>${esc(monthName(m))}</strong></div><div class="card-sub">Round ${open?"open":"finished"}. All amounts in ৳. Click any card, row or person for full details.</div></div>
-  <div class="actions"><button class="btn" data-print>Print / PDF report</button><button class="btn" data-cash-count>Count cash now</button></div></div>
+  <div class="actions">${fineSeg(together)}<button class="btn" data-print>Print / PDF report</button><button class="btn" data-cash-count>Count cash now</button></div></div>
  ${addCard()}
  ${combined}${mockGlance()}
  ${sourceLedger()}
@@ -273,6 +289,7 @@ export function bindDashboard(){
  $("#dash-edit")?.addEventListener("click",()=>{view.editLayout=!view.editLayout;render();});
  $("#dash-reset")?.addEventListener("click",()=>{if(!confirm("Put every block back in its original place and show all of them?"))return;d.order=[];d.hidden=[];save();});
  $$("[data-fine-mode]").forEach(b=>b.onclick=()=>{d.fineTogether=b.dataset.fineMode==="together";save();});
+ $$("[data-board-overview]").forEach(b=>b.onclick=()=>{view.dashboardBoard=b.dataset.boardOverview;render();});
  $("#mk-add")?.addEventListener("click",()=>{const v=id=>$("#"+id)?.value;const err=addEntry({board:v("mk-board"),date:v("mk-date"),type:v("mk-type"),who:v("mk-who"),amount:v("mk-amt"),note:v("mk-note")});if(err&&$("#mk-err"))$("#mk-err").textContent=err;});
  $$("[data-dtab]").forEach(b=>b.onclick=()=>{view.dashTab=b.dataset.dtab;render();});
  $$("[data-jump]").forEach(b=>b.onclick=()=>document.getElementById("blk-"+b.dataset.jump)?.scrollIntoView({behavior:"smooth",block:"start"}));
@@ -283,7 +300,6 @@ export function bindDashboard(){
  $$("[data-move]").forEach(b=>b.onclick=()=>{const o=blockOrder(),i=o.indexOf(b.dataset.block),j=i+Number(b.dataset.move);if(i>=0&&j>=0&&j<o.length)place(b.dataset.block,j);});
  $$("[data-hide]").forEach(b=>b.onclick=()=>{const id=b.dataset.hide;d.hidden=d.hidden.includes(id)?d.hidden.filter(x=>x!==id):[...d.hidden,id];save();});
  let drag=null;
- $$(["data-board-overview"]).forEach(b=>b.onclick=()=>{view.dashboardBoard=b.dataset.boardOverview;render();});
  $$(".dz").forEach(el=>{
   el.draggable=true;
   el.addEventListener("dragstart",e=>{drag=el.dataset.block;el.classList.add("dragging");if(e.dataTransfer){e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",drag);}});

@@ -16,7 +16,8 @@
 .bd-head h3 { margin: 0; font-size: 16px; }
 .bd-pill { font-size: 11px; padding: 3px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); }
 .bd-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; margin: 10px 0; }
-.bd-m { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; }
+.bd-m { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; text-align: left; color: inherit; font: inherit; width: 100%; transition: border-color .15s, box-shadow .15s; }
+.bd-m:hover { border-color: var(--blue); box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 25%, transparent); }
 .bd-m.bd-hl { border-color: var(--blue); }
 .bd-ml { font-size: 12px; color: var(--muted); }
 .bd-m strong { font-size: 17px; }

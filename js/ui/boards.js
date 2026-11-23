@@ -23,7 +23,7 @@ function row(e){
  const linkText=linked?`<span class="bd-link-source">↳ From ${esc(linked.person||linked.description||"collection")} · ${esc(linked.collectionDate||"")} · ${money(linked.amount)}</span>`:"";
  return `<button class="bd-row ${linked?"bd-linked-row":""}" data-ev="${esc(e.key)}">${tag(e.k)}<span class="bd-desc">${esc(e.desc)}${e.who?`<span class="bd-who"> · ${esc(e.who)}</span>`:""}${linkText}</span><span class="bd-amt ${cashCls(e)}">${cashText(e)}</span><span class="bd-go" aria-hidden="true">›</span></button>`;
 }
-function metric(label,value,attrs="",cls=""){return `<div class="bd-m ${cls}" ${attrs}><span class="bd-ml">${label}</span><strong>${value}</strong></div>`;}
+function metric(label,value,attrs="",cls=""){return `<button type="button" class="bd-m ${cls}" ${attrs}><span class="bd-ml">${label}</span><strong>${value}</strong></button>`;}
 
 function boardHtml(b,m){
  const closed=closeRec(m,b)?.status==="Closed",rec=closeRec(m,b),bm=boardMonth(b,m);
@@ -40,7 +40,7 @@ function boardHtml(b,m){
  return `<div class="card bd-board ${b.id==="main"?"bd-main":""}"><div class="bd-head"><h3>${b.id==="main"?"1. ":"2. "}${esc(b.title)}</h3><span class="bd-pill">${b.id==="main"?"Priority":"Fine money only"}</span></div>
  ${warn.map(w=>`<div class="banner warn">⚠ ${esc(w)}</div>`).join("")}
  <div class="bd-metrics">${metric("Received this month",money(bm.had),`data-calc="${b.id}:had"`)}${metric("Expenses this month",money(bm.spent),`data-calc="${b.id}:spent"`)}${metric("Given to principal (this month)",money(bm.given),`data-calc="${b.id}:given"`)}${metric("Cash on hand",money(bm.cash),`data-calc="${b.id}:cash"`)}${metric("Still to give",money(bm.still),`data-calc="${b.id}:still"`,"bd-hl")}</div>
- ${opening}${days}${status}<div class="bd-summary"><strong>Summary: ${esc(b.title)}, ${esc(monthName(m))}</strong><div>Collected <b>${money(bm.had)}</b></div><div>Spent <b class="bd-neg">${money(bm.spent)}</b></div><div>Should give <b>${money(bm.should)}</b></div><div>Given to principal <b class="bd-blue-t">${money(bm.givenAll)}</b></div>${bm.overGiven>0.005?`<div class="bd-amber-t">You gave extra <b>${money(bm.overGiven)} · Principal owes you</b></div>`:""}<div>Cash in hand <b>${money(bm.cash)}</b></div><div>Still need to give <b>${money(bm.still)}</b></div>${bm.shortfall?`<div class="bd-unexplained">Unexplained shortfall <b>${money(bm.shortfall)}</b></div>`:""}</div>
+ ${opening}${days}${status}<div class="bd-summary"><strong>Summary: ${esc(b.title)}, ${esc(monthName(m))}</strong><div>Collected <b>${money(bm.had)}</b></div><div>Spent <b class="bd-neg">${money(bm.spent)}</b></div><div>Should give <b>${money(bm.should)}</b></div><div>Given to principal <b class="bd-blue-t">${money(bm.givenAll)}</b></div>${bm.overGiven>0.005?`<div class="bd-amber-t">You gave extra <b>${money(bm.overGiven)} · Principal owes you</b></div>`:""}<div>Cash on hand <b>${money(bm.cash)}</b></div><div>Still to give <b>${money(bm.still)}</b></div>${bm.shortfall?`<div class="bd-unexplained">Unexplained shortfall <b>${money(bm.shortfall)}</b></div>`:""}</div>
  <div class="actions bd-actions"><button class="btn primary" data-modal="handover" data-preset-fund="${esc(b.fund)}">Give to principal</button>${closed?`<button class="btn" data-bd-reopen="${b.id}">Reopen</button>`:`<button class="btn" data-bd-close="${b.id}">Finish accountability</button>`}</div></div>`;
 }
 
@@ -114,7 +114,7 @@ function obligationDetail(i){
 function calcDetail(id,what){
  const b=BOARDS.find(z=>z.id===id),bm=boardMonth(b,month()),ev=bm.upto,inM=ev.filter(e=>e.d.slice(0,7)===month());
  const field={cash:"cash",still:"should",had:"v",spent:"v",given:"given"}[what];
- let src=ev,title={cash:"Where your cash comes from and goes",still:"How still need to give is calculated",had:"Money received this month",spent:"Expenses this month",given:"Given to principal this month"}[what],extra="";
+ let src=ev,title={cash:"Where cash comes from and goes",still:"How still to give is calculated",had:"Money received this month",spent:"Expenses this month",given:"Given to principal this month"}[what],extra="";
  let lines;
  if(what==="had")lines=breakdown(inM.filter(e=>["in","fin","mi"].includes(e.k)),"v");
  else if(what==="spent")lines=breakdown(inM.filter(e=>EXPENSE_KINDS.includes(e.k)),"v");
@@ -122,8 +122,8 @@ function calcDetail(id,what){
  else lines=breakdown(src,field);
  const sign=(v,k)=>what==="had"||what==="spent"||what==="given"?money(v):(v>0?"+":"−")+money(Math.abs(v));
  let body=lines.length?lines.map(l=>rc(esc(l.label),sign(l.value,l.k))).join(""):rc("No entries","");
- if(what==="still")extra=rc("= Should give principal",`<strong>${money(bm.should)}</strong>`)+rc("− Already given",money(bm.givenAll))+rc("= Still need to give",`<strong>${money(bm.still)}</strong>`);
- if(what==="cash")extra=rc("= Cash left",`<strong>${money(bm.cash)}</strong>`)+`<p class="card-sub">Cash carries over from earlier months. Count it with Cash Counter to compare with this figure.</p>`;
+ if(what==="still")extra=rc("= Should give principal",`<strong>${money(bm.should)}</strong>`)+rc("− Already given",money(bm.givenAll))+rc("= Still to give",`<strong>${money(bm.still)}</strong>`);
+ if(what==="cash")extra=rc("= Cash on hand",`<strong>${money(bm.cash)}</strong>`)+`<p class="card-sub">Cash carries over from earlier months. Use Count cash to compare with this figure.</p>`;
  modal(`${b.title}: ${title}`,`<div class="receipt">${body}${extra}</div>`);
 }
 

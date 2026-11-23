@@ -505,7 +505,8 @@ details.fx-more > summary {
 .sm-split{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:14px}
 .sm-split strong{color:var(--text)}
 .sm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.sm-kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:2px}
+.sm-kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:2px;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.sm-kpi:hover{border-color:var(--blue);box-shadow:0 0 0 2px color-mix(in srgb,var(--blue) 25%,transparent)}
 .sm-kpi strong{font-size:22px}
 .sm-boards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .sm-board{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}

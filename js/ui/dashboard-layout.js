@@ -188,17 +188,18 @@ function smartHtml(){
 
 /** "Where is every taka?" exactly as in the design: banners first, then the bar, legend and nine figure cards. */
 function mockGlance(){
- const g=glanceData(),m=money,owedMe=Math.round(owedRows().filter(r=>!r.key.startsWith("h:")).reduce((n,r)=>n+r.amount,0)*100)/100;
- const should=Math.round(BOARDS.reduce((n,b)=>n+boardTotals(b).should,0)*100)/100;
- const parts=[["Cash with me",g.cash,"c1"],["Spent",g.spentX,"c2"],["Given to principal",g.hand,"c3"],["Waiting for voucher",g.hold,"c4"],["Owed to me",owedMe,"c5"],["My personal take",g.persOut,"c6"]];
+ const board=view.dashboardBoard||"main",fund=board==="fine"?FINE:REG,bt=boardTotals(BOARDS.find(x=>x.id===board)),flow=fundFlow(fund),m=money;
+ const title=board==="fine"?"Fine":"Main",cash=bt.cash,spent=bt.spent,given=bt.givenAll,still=bt.still,over=bt.overGiven,should=bt.should;
+ const owed=owedRows().filter(r=>r.fund===fund&&!r.key.startsWith("p:")).reduce((n,r)=>n+r.amount,0);
+ const parts=[["Cash in this board",cash,"c1"],["Spent",spent,"c2"],["Given to principal",given,"c3"],["Owed back to me",owed,"c5"]];
  const tot=Math.max(1,parts.reduce((n,p)=>n+Math.max(0,p[1]),0));
- const c=(k,l,v,sub)=>`<button class="gl-card" data-glance="${k}"><span class="card-label">${l}</span><strong>${m(v)}</strong><span class="card-sub">${esc(sub)}</span></button>`;
- return `${g.warn.map(w=>`<div class="banner warn">${esc(w)}</div>`).join("")}
- <div class="banner ok">Received ${m(g.recv)} = placed ${m(g.placed)} · unexplained ${m(g.diff)}</div>
- <div class="card mkg"><h3>Where is every taka?</h3>
-  <div class="gl-bar" role="img" aria-label="Money distribution">${parts.map(p=>`<span class="seg mkg-${p[2]}" style="width:${(Math.max(0,p[1])/tot*100).toFixed(2)}%" title="${esc(p[0])} ${m(p[1])}"></span>`).join("")}</div>
+ const c=(l,v,sub,cls="")=>`<div class="gl-card ${cls}"><span class="card-label">${l}</span><strong>${m(v)}</strong><span class="card-sub">${esc(sub)}</span></div>`;
+ const toggle=`<div class="mk-board-switch" role="tablist" aria-label="Choose board"><button class="btn ${board==="main"?"primary":""}" data-board-overview="main" role="tab" aria-selected="${board==="main"}">Main</button><button class="btn ${board==="fine"?"primary":""}" data-board-overview="fine" role="tab" aria-selected="${board==="fine"}">Fine</button></div>`;
+ const remaining=over>0?c("Principal owes me (over-given)",over,"Principal must return this amount","amber"):c("Still need to give principal",still,`Should give ${m(should)} · Already given ${m(given)}`);
+ return `${toggle}<div class="card mkg"><h3>Where is every taka? · ${title}</h3>
+  <div class="gl-bar" role="img" aria-label="${title} money distribution">${parts.map(p=>`<span class="seg mkg-${p[2]}" style="width:${(Math.max(0,p[1])/tot*100).toFixed(2)}%" title="${esc(p[0])} ${m(p[1])}"></span>`).join("")}</div>
   <div class="gl-legend">${parts.map(p=>`<span><i class="dot mkg-${p[2]}"></i>${esc(p[0])}: <strong>${m(p[1])}</strong></span>`).join("")}</div>
-  <div class="mkg-grid">${c("received","Total received",g.recv,"All boards")}${c("spent","Spent",g.spentX,"Expenses only")}${c("cash","Cash with me",g.cash,`Main ${m(g.cashMain)} · Fine ${m(g.cashFine)}`)}${c("hand","Given to principal",g.hand,"All boards")}${c("owedprin","Still need to give",mustGivePrincipal(),"Should give "+m(should))}${c("owedme","Owed to me",owedMe,"Loans and change")}${c("iowe","I owe others",g.iOweOthers,"Teachers, change")}${c("hold","Waiting for voucher",g.hold,"Not an expense yet")}${c("pers","My personal take",g.persOut,"Must put back")}</div>
+  <div class="mkg-grid">${c(`${title} income`,flow.inn,`Collected into ${title} only`)}${c(`${title} expenses`,spent,"Expenses from this board only")}${c(`${title} cash`,cash,"Cash belonging to this board only")}${c("Given to principal",given,`${title} board only`)}${remaining}${c("People owe me",owed,`${title} money lent / held by others`)}</div>
  </div>`;
 }
 
@@ -282,6 +283,7 @@ export function bindDashboard(){
  $$("[data-move]").forEach(b=>b.onclick=()=>{const o=blockOrder(),i=o.indexOf(b.dataset.block),j=i+Number(b.dataset.move);if(i>=0&&j>=0&&j<o.length)place(b.dataset.block,j);});
  $$("[data-hide]").forEach(b=>b.onclick=()=>{const id=b.dataset.hide;d.hidden=d.hidden.includes(id)?d.hidden.filter(x=>x!==id):[...d.hidden,id];save();});
  let drag=null;
+ $$(["data-board-overview"]).forEach(b=>b.onclick=()=>{view.dashboardBoard=b.dataset.boardOverview;render();});
  $$(".dz").forEach(el=>{
   el.draggable=true;
   el.addEventListener("dragstart",e=>{drag=el.dataset.block;el.classList.add("dragging");if(e.dataTransfer){e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",drag);}});

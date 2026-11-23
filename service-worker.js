@@ -1,4 +1,4 @@
-const CACHE = "financial-accountability-v20";
+const CACHE = "financial-accountability-v21";
 const ASSETS = [
   "./",
   "./index.html",

@@ -78,10 +78,31 @@ export function owedDetail(key){
 }
 const outCard=(l,v,s)=>`<div class="card out-card"><div class="card-label">${l}</div><div class="card-value out-text">▼ ${money(v)}</div><div class="card-sub">${esc(s)}</div></div>`;
 
+/** Source ledger: show the original collection and every linked use/return below it. */
+function sourceLedger(){
+ const cols=active(state.collections).filter(c=>c.status!=="Void");
+ const linkedRows=(collection)=>{
+  const id=collection.id, fund=collection.category==="Fines"?FINE:REG;
+  const expenses=active(state.expenses).filter(x=>x.sourceCollectionId===id);
+  const handovers=active(state.handovers).filter(x=>x.sourceCollectionId===id);
+  const loans=customList().filter(x=>x.sourceCollectionId===id&&x.direction==="Someone owes me");
+  const lines=[];
+  expenses.forEach(x=>lines.push(`<div class="src-child"><span><b class="out-text">Expense</b> · ${esc(x.date||"—")} · ${esc(x.description||x.category||"Expense")}</span><strong class="out-text">−${money(x.amount)}</strong></div>`));
+  handovers.forEach(x=>lines.push(`<div class="src-child"><span><b>Given to principal</b> · ${esc(x.date||"—")}${x.recipient?" · "+esc(x.recipient):""}</span><strong>${money(x.amount)}</strong></div>`));
+  loans.forEach(x=>{const back=customRet(x),out=customOutstanding(x);lines.push(`<div class="src-child"><span><b>Loan to ${esc(x.party||x.label||"someone")}</b> · ${esc(x.date||"—")} · Returned ${money(back)}</span><strong class="out-text">Still owed ${money(out)}</strong></div>`);});
+  const total=num(collection.amount),used=expenses.filter(x=>x.actualPayer==="You"||!x.actualPayer).reduce((n,x)=>n+num(x.amount),0),hand=handovers.reduce((n,x)=>n+num(x.amount),0);
+  const extra=Math.max(0,hand-(total-used));
+  if(extra>0)lines.push(`<div class="src-child src-amber"><span><b>Principal owes you (extra handover)</b> · derived from this collection</span><strong>${money(extra)}</strong></div>`);
+  return `<div class="src-group"><div class="src-head"><span><b>${esc(fund===FINE?"Fine income":"Main income")}</b> · ${esc(collection.collectionDate||"—")} · ${esc(collection.person||collection.description||"Collection")}</span><strong class="in-text">+${money(total)}</strong></div>${lines.length?lines.join(""):`<div class="src-child src-muted">No linked spending, handovers or loans yet.</div>`}<div class="src-foot">Linked records: expenses ${money(used)} · handovers ${money(hand)} · ${extra?`principal owes you ${money(extra)}`:`no calculated extra handover`}</div></div>`;
+ };
+ return `<div class="card source-ledger"><h3>Income and its movements</h3><p class="card-sub">Each collection is the parent. Linked expenses, handovers, loans, and repayments appear underneath it.</p>${cols.length?cols.map(linkedRows).join(""):`<div class="empty">No collections yet.</div>`}<div class="src-legend"><b>Outstanding balances:</b> people owe you ${money(owedTotal())} · you owe others ${money(obligations().totals.iOwe)}</div></div>`;
+}
+
 const BLOCKS=[
  ["received","Total received, Income, Fine",()=>{const g=glanceData(),pr=fundFlow(PRIN).inn;
   return `<div class="grid cards-4">${card("Total received",money(g.recv),"All money in, all funds")}${card("Income",money(fundFlow(REG).inn),"Regular fund")}${card("Fine",money(fundFlow(FINE).inn),"Fine fund")}${pr?card("Principal's money",money(pr),"Principal fund"):""}</div>`;}],
  ["owed","People who owe me",owedBlock],
+ ["source-ledger","Income and its movements",sourceLedger],
  ["moneyout","Spent and given out",()=>`<div class="grid cards-2">${outCard("Spent from funds",glanceData().spentX,"Expenses only. Money given to people is not counted here")}${outCard("Given to people (they owe me)",owedTotal(),"Taken from a fund, still to come back or get a voucher")}</div>`],
  ["boards","Main and Fine boards",()=>boardsSection()],
  ["quick","Quick actions",()=>`<div class="actions quick"><button class="btn primary" data-modal="collection">+ Add collection</button><button class="btn primary" data-modal="expense">+ Add expense</button><button class="btn" data-modal="hold">Give money (waiting for voucher)</button><button class="btn" data-modal="handover">Give money to principal</button></div>`],
@@ -151,8 +172,10 @@ function smartHtml(){
    <div class="sm-split">${together?`<span>Main ${money(bm[0].still)} + Fine ${money(bm[1].still)} shown together</span>`:`<span>Main <strong>${money(bm[0].still)}</strong></span><span>Fine <strong>${money(bm[1].still)}</strong></span>`}</div></div>
   <div class="sm-kpis">${kpi("Total received",money(g.recv),"All boards")}${kpi("Spent",money(g.spentX),"Expenses only","out-text")}${kpi("Cash with me",money(g.cash),g.last?"Counted "+money(g.last.counted):"Never counted")}${kpi("Owed to me",money(owedTotal()),"People who owe me","out-text")}${kpi("I owe others",money(ob.iOwe),"Teachers, change")}${kpi("My personal take",money(ob.personal),"Must put back")}</div></div>
  ${together?"":`<div class="sm-boards">${bcard("Main income","Priority",bm[0],BOARDS[0].fund)}${bcard("Fine","Fine money only",bm[1],BOARDS[1].fund)}</div>`}
+ ${sourceLedger()}
  <div class="sm-cols"><div class="sm-left">
-   <details class="fx-more sm-fold" open><summary>Day by day: Main and Fine boards</summary>${boardsCore()}</details>
+   ${sourceLedger()}
+ <details class="fx-more sm-fold" open><summary>Day by day: Main and Fine boards</summary>${boardsCore()}</details>
    <details class="fx-more sm-fold"><summary>Where is every taka?</summary>${glance()}</details>
   </div><aside class="sm-right">
    ${addCard()}
@@ -189,6 +212,7 @@ function mockHtml(){
   <div class="actions"><button class="btn" data-print>Print / PDF report</button><button class="btn" data-cash-count>Count cash now</button></div></div>
  ${addCard()}
  ${combined}${mockGlance()}
+ ${sourceLedger()}
  ${boardsCore()}
  <div class="grid cards-2"><div class="card"><h3>Spending by category</h3>${categoryBars()}</div><div class="card"><h3>Collections by category</h3>${collectionBars()}</div></div>
  <div class="grid cards-2"><div class="card"><h3>Vouchers</h3>${voucherStatusCards()}</div><div class="card"><h3>Bank, bKash, Nagad</h3><div class="card-sub">Not tracked yet. No figure shown rather than a made-up one.</div></div></div>

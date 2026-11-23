@@ -13,12 +13,12 @@ export function openModal(kind,id,preset){
  const f=forms[kind];if(!f)return;
  const key=collectionKey(kind),existing=id?state[key].find(x=>x.id===id):null;
  const fields=f.fields.map(([name,label,type,options])=>{
-  if(typeof options==="function")options=options();
+  if(typeof options==="function")options=options(preset);
   const value=existing?.[name]??preset?.[name]??(type==="date"?(OPTIONAL.has(name)?"":today()):type==="month"?today().slice(0,7):type==="number"?0:"");
   let control;
   if(type==="select"){
-   const opts=(typeof options==="string"?options.split(","):[]);
-   control=`<select name="${name}">${opts.map(v=>`<option value="${esc(v)}" ${String(value)===v?"selected":""}>${esc(v)}</option>`).join("")}</select>`;
+   const opts=(typeof options==="string"?options.split(","):Array.isArray(options)?options:[]);
+   control=`<select name="${name}"><option value="">No collection link</option>${opts.map(raw=>{const [v,l]=String(raw).split("::");return `<option value="${esc(v)}" ${String(value)===v?"selected":""}>${esc(l||v)}</option>`;}).join("")}</select>`;
   }else control=`<input name="${name}" type="${type}" value="${esc(value)}" ${type==="number"?'step="0.01" min="0"':""} ${OPTIONAL.has(name)?"":"required"}>`;
   return `<div class="field ${["description","reason","purpose","dates","note","label"].includes(name)?"full":""}"><label>${esc(label)}</label>${control}</div>`;
  }).join("");

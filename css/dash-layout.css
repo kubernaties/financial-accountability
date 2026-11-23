@@ -526,3 +526,5 @@ details.sm-fold>summary{font-weight:600;color:var(--text)}
 
 .mk-styles{margin-top:16px}
 .mk-styles .dash-bar{margin:0 0 12px}
+/* Source-linked income ledger: parent collection, nested movement records */
+.source-ledger{margin:12px 0}.src-group{border:1px solid var(--border,rgba(127,127,127,.25));border-radius:12px;overflow:hidden;margin:10px 0}.src-head,.src-child,.src-foot,.src-legend{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 12px}.src-head{background:var(--surface-2,rgba(127,127,127,.08));}.src-child{padding-left:24px;border-top:1px solid var(--border,rgba(127,127,127,.18));font-size:.94em}.src-child strong{white-space:nowrap}.src-muted,.src-foot,.src-legend{color:var(--muted,inherit);font-size:.88em}.src-amber{color:var(--warning, #b87900)}.src-foot{border-top:1px dashed var(--border,rgba(127,127,127,.3));flex-wrap:wrap}

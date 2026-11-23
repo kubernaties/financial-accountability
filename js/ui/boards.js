@@ -19,7 +19,9 @@ const cashCls=e=>e.k==="gp"?"bd-blue-t":e.k==="hd"?"bd-amber-t":e.cash>0?"bd-pos
 const shouldEffect=e=>Math.round((e.should-e.given)*100)/100;
 
 function row(e){
- return `<button class="bd-row" data-ev="${esc(e.key)}">${tag(e.k)}<span class="bd-desc">${esc(e.desc)}${e.who?`<span class="bd-who"> · ${esc(e.who)}</span>`:""}</span><span class="bd-amt ${cashCls(e)}">${cashText(e)}</span><span class="bd-go" aria-hidden="true">›</span></button>`;
+ const linked=e.sourceCollectionId?state.collections.find(c=>c.id===e.sourceCollectionId):null;
+ const linkText=linked?`<span class="bd-link-source">↳ From ${esc(linked.person||linked.description||"collection")} · ${esc(linked.collectionDate||"")} · ${money(linked.amount)}</span>`:"";
+ return `<button class="bd-row ${linked?"bd-linked-row":""}" data-ev="${esc(e.key)}">${tag(e.k)}<span class="bd-desc">${esc(e.desc)}${e.who?`<span class="bd-who"> · ${esc(e.who)}</span>`:""}${linkText}</span><span class="bd-amt ${cashCls(e)}">${cashText(e)}</span><span class="bd-go" aria-hidden="true">›</span></button>`;
 }
 function metric(label,value,attrs="",cls=""){return `<div class="bd-m ${cls}" ${attrs}><span class="bd-ml">${label}</span><strong>${value}</strong></div>`;}
 
@@ -87,8 +89,8 @@ function eventDetail(key){
  if(e.who)x.push(rc("Who",esc(e.who)));
  if(e.cat)x.push(rc("Category",esc(e.cat)));
  x.push(rc("Amount",money(e.v)),rc("Effect on cash",esc(cashText(e))),rc("Effect on still need to give",eff===0?"None":(eff>0?"+":"−")+money(Math.abs(eff))));
- if(e.sk==="expense"){x.push(rc("Paid by",esc(s.actualPayer||"You")),rc("Voucher number",esc(s.voucherNumber||"Not recorded")));}
- if(e.sk==="handover")x.push(rc("Accountability status",esc(s.status||"Pending")));
+ if(e.sk==="expense"){x.push(rc("Paid by",esc(s.actualPayer||"You")),rc("Linked collection",esc(s.sourceCollectionId?state.collections.find(c=>c.id===s.sourceCollectionId)?.person||state.collections.find(c=>c.id===s.sourceCollectionId)?.description||"Linked collection":"Not linked")),rc("Voucher number",esc(s.voucherNumber||"Not recorded")));}
+ if(e.sk==="handover")x.push(rc("Linked collection",esc(s.sourceCollectionId?state.collections.find(c=>c.id===s.sourceCollectionId)?.person||state.collections.find(c=>c.id===s.sourceCollectionId)?.description||"Linked collection":"Not linked")),rc("Accountability status",esc(s.status||"Pending")));
  if(e.sk==="hold")x.push(rc("Voucher status","Waiting for voucher until you press Voucher received"));
  if(e.ts)x.push(rc("Recorded",esc(new Date(e.ts).toLocaleString("en-GB"))));
  const b=[];

@@ -63,3 +63,6 @@
 .bd-summary > div { display: flex; justify-content: space-between; gap: 12px; }
 .bd-summary .bd-unexplained { color: #7b35b4; font-weight: 600; }
 .bd-purple-t { color: #7b35b4; }
+
+/* Explicit source links: visually nest expenses and handovers under their funding collection. */
+.bd-linked-row .bd-desc{padding-left:14px;position:relative}.bd-link-source{display:block;font-size:11px;opacity:.82;margin-top:2px;padding-left:2px}.bd-linked-row{border-left:3px solid var(--bd-amber, #d49b34)}

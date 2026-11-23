@@ -36,7 +36,7 @@ export function events(fund){
 
  active(state.collections).forEach(c=>{
   const fine=c.category==="Fines";if(fine!==(fund===FINE))return;const a=num(c.amount);
-  add(fine?"fin":"in",dOf(c,"collectionDate"),a,{cash:a,should:a,who:c.person||"",desc:c.description||c.category||"Collection",cat:c.category||"Other",src:c,sk:"collection",ts:c.timestamp});
+  add(fine?"fin":"in",dOf(c,"collectionDate"),a,{cash:a,should:a,who:c.person||"",desc:c.description||c.category||"Collection",cat:c.category||"Other",src:c,sk:"collection",sourceCollectionId:c.id,ts:c.timestamp});
  });
  if(fund===FINE)active(state.fines).filter(f=>f.source==="Fine collection").forEach(f=>{
   const a=num(f.amount);add("fin",dOf(f,"date"),a,{cash:a,should:a,desc:f.reason||"Fine collection",cat:"Fines",src:f,sk:"fine",ts:f.timestamp});
@@ -52,7 +52,7 @@ export function events(fund){
 
  active(state.expenses).forEach(x=>{
   if(fundOf(x)!==fund)return;const a=num(x.amount);
-  const base={who:x.actualPayer||"",desc:x.description||x.category||"Expense",cat:x.category||"Uncategorised",src:x,sk:"expense",ts:x.timestamp};
+  const base={who:x.actualPayer||"",desc:x.description||x.category||"Expense",cat:x.category||"Uncategorised",src:x,sk:"expense",sourceCollectionId:x.sourceCollectionId||"",ts:x.timestamp};
   if(x.holdId)add("vr",dOf(x,"date"),a,{...base,who:"",should:-a});
   else if(x.actualPayer==="Teacher")add("tp",dOf(x,"date"),a,{...base,should:-a});
   else if(x.actualPayer==="Principal")add("pp",dOf(x,"date"),a,base);
@@ -74,7 +74,7 @@ export function events(fund){
 
  active(state.handovers).forEach(h=>{
   if((h.fund===FINE?FINE:REG)!==fund)return;const a=num(h.amount);
-  add("gp",dOf(h,"date"),a,{cash:-a,given:a,who:h.recipient||"Principal",desc:"Given to principal"+(h.status==="Accounted"?" (accounted)":""),src:h,sk:"handover",ts:h.timestamp});
+  add("gp",dOf(h,"date"),a,{cash:-a,given:a,who:h.recipient||"Principal",desc:"Given to principal"+(h.status==="Accounted"?" (accounted)":""),src:h,sk:"handover",sourceCollectionId:h.sourceCollectionId||"",ts:h.timestamp});
  });
 
  customList().filter(c=>c.fund===fund).forEach(c=>{
